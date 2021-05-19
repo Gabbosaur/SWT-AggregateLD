@@ -3,12 +3,11 @@
 
 '''
 problemi:
-	come fare import tensorflow===========>https://code.visualstudio.com/docs/python/environments#:~:text=To%20select%20a%20specific%20environment,or%20library%20versions%20as%20needed.
 	come usare variabili all'interno dei path
 '''
 import os
 
-os.system('cd C:\\Users\\luca\\Desktop\\tensorflow_object_detaction\\TFODCourse')
+#os.system('cd C:\\Users\\luca\\Desktop\\tensorflow_object_detaction\\TFODCourse')
 os.system('.\tfod\Scripts\activate')
 
 
@@ -122,8 +121,10 @@ if os.path.exists(ARCHIVE_FILES):
 if not os.path.exists(files['TF_RECORD_SCRIPT']):
     os.system('git clone https://github.com/nicknochnack/GenerateTFRecord {paths[\'SCRIPTS_PATH\']}')
 
-os.system('python {files[\'TF_RECORD_SCRIPT\']} -x {os.path.join(paths[\'IMAGE_PATH\'], \'train\')} -l {files[\'LABELMAP\']} -o {os.path.join(paths[\'ANNOTATION_PATH\'], \'train.record\')} ')
-os.system('python {files[\'TF_RECORD_SCRIPT\']} -x {os.path.join(paths[\'IMAGE_PATH\'], \'test\')} -l {files[\'LABELMAP\']} -o {os.path.join(paths[\'ANNOTATION_PATH\'], \'test.record\')} ')
+#################################################################################################################
+os.system('python {'+ files['\'TF_RECORD_SCRIPT\''] +'} -x {os.path.join('+paths['IMAGE_PATH']+', \'train\')} -l {files[\'LABELMAP\']} -o {os.path.join(paths[\'ANNOTATION_PATH\'], \'train.record\')} ')
+
+os.system('python {'+ files['TF_RECORD_SCRIPT'] +'} -x {os.path.join(paths[\'IMAGE_PATH\'], \'test\')} -l {files[\'LABELMAP\']} -o {os.path.join(paths[\'ANNOTATION_PATH\'], \'test.record\')} ')
 
 
 # 4. Copy Model Config to Training Folder
@@ -140,13 +141,14 @@ from object_detection.utils import config_util
 from object_detection.protos import pipeline_pb2
 from google.protobuf import text_format
 
+
 config = config_util.get_configs_from_pipeline_file(files['PIPELINE_CONFIG'])
 
 
 pipeline_config = pipeline_pb2.TrainEvalPipelineConfig()
-with tf.io.gfile.GFile(files['PIPELINE_CONFIG'], "r") as f:                                                                                                                                                                                                                     
-    proto_str = f.read()                                                                                                                                                                                                                                          
-    text_format.Merge(proto_str, pipeline_config)  
+with tf.io.gfile.GFile(files['PIPELINE_CONFIG'], "r") as f:
+    proto_str = f.read()
+    text_format.Merge(proto_str, pipeline_config)
 
 pipeline_config.model.ssd.num_classes = len(labels)
 pipeline_config.train_config.batch_size = 4
@@ -215,7 +217,8 @@ paths['CHECKPOINT_PATH']
 import cv2 
 import numpy as np
 from matplotlib import pyplot as plt
-%matplotlib inline
+#%matplotlib inline
+plt.show()
 
 category_index = label_map_util.create_category_index_from_labelmap(files['LABELMAP'])
 
@@ -348,6 +351,7 @@ print(command)
 # 13. Zip and Export Models 
 
 os.system('tar -czf models.tar.gz {paths[\'CHECKPOINT_PATH\']}')
-
+'''
 from google.colab import drive
 drive.mount('/content/drive')
+'''
