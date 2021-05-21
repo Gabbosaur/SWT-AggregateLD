@@ -116,23 +116,23 @@ with open(files['LABELMAP'], 'w') as f:
 # OPTIONAL IF RUNNING ON COLAB
 ARCHIVE_FILES = os.path.join(paths['IMAGE_PATH'], 'archive.tar.gz')
 if os.path.exists(ARCHIVE_FILES):
-  os.system('tar -zxvf {ARCHIVE_FILES}')
+  os.system('tar -zxvf {'+ARCHIVE_FILES+'}')
 
 if not os.path.exists(files['TF_RECORD_SCRIPT']):
-    os.system('git clone https://github.com/nicknochnack/GenerateTFRecord {paths[\'SCRIPTS_PATH\']}')
+    os.system('git clone https://github.com/nicknochnack/GenerateTFRecord {'+paths['SCRIPTS_PATH']+'}')
 
 #################################################################################################################
-os.system('python {'+ files['\'TF_RECORD_SCRIPT\''] +'} -x {os.path.join('+paths['IMAGE_PATH']+', \'train\')} -l {files[\'LABELMAP\']} -o {os.path.join(paths[\'ANNOTATION_PATH\'], \'train.record\')} ')
+os.system('python {'+ files['TF_RECORD_SCRIPT'] +'} -x {os.path.join('+paths['IMAGE_PATH']+', \'train\')} -l {' + files['LABELMAP'] + '} -o {os.path.join(' + paths['ANNOTATION_PATH'] + ', \'train.record\')} ')
 
-os.system('python {'+ files['TF_RECORD_SCRIPT'] +'} -x {os.path.join(paths[\'IMAGE_PATH\'], \'test\')} -l {files[\'LABELMAP\']} -o {os.path.join(paths[\'ANNOTATION_PATH\'], \'test.record\')} ')
+os.system('python {'+ files['TF_RECORD_SCRIPT'] +'} -x {os.path.join('+paths['IMAGE_PATH']+', \'test\')} -l {'+files['LABELMAP']+'} -o {os.path.join('+paths['ANNOTATION_PATH']+', \'test.record\')} ')
 
 
 # 4. Copy Model Config to Training Folder
 
 if os.name =='posix':
-	os.system('cp {os.path.join(paths[\'PRETRAINED_MODEL_PATH\'], PRETRAINED_MODEL_NAME, \'pipeline.config\')} {os.path.join(paths[\'CHECKPOINT_PATH\'])}')
+	os.system('cp {os.path.join('+ paths['PRETRAINED_MODEL_PATH']+', '+PRETRAINED_MODEL_NAME+', \'pipeline.config\')} {os.path.join('+paths['CHECKPOINT_PATH']+')}')
 if os.name == 'nt':
-    os.system('copy {os.path.join(paths[\'PRETRAINED_MODEL_PATH\'], PRETRAINED_MODEL_NAME, \'pipeline.config\')} {os.path.join(paths[\'CHECKPOINT_PATH\'])}')
+    os.system('copy {os.path.join('+paths['PRETRAINED_MODEL_PATH']+', '+PRETRAINED_MODEL_NAME+', \'pipeline.config\')} {os.path.join('+paths['CHECKPOINT_PATH']+')}')
 
 # 5. Update Config For Transfer Learning
 
