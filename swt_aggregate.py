@@ -159,9 +159,9 @@ pipeline_config.train_input_reader.tf_record_input_reader.input_path[:] = [os.pa
 pipeline_config.eval_input_reader[0].label_map_path = files['LABELMAP']
 pipeline_config.eval_input_reader[0].tf_record_input_reader.input_path[:] = [os.path.join(paths['ANNOTATION_PATH'], 'test.record')]
 
-config_text = text_format.MessageToString(pipeline_config)                                                                                                                                                                                                        
-with tf.io.gfile.GFile(files['PIPELINE_CONFIG'], "wb") as f:                                                                                                                                                                                                                     
-    f.write(config_text)   
+config_text = text_format.MessageToString(pipeline_config)
+with tf.io.gfile.GFile(files['PIPELINE_CONFIG'], "wb") as f:
+	    f.write(config_text)
 
 # 6. Train the model
 '''
@@ -304,8 +304,8 @@ while cap.isOpened():
 FREEZE_SCRIPT = os.path.join(paths['APIMODEL_PATH'], 'research', 'object_detection', 'exporter_main_v2.py ')
 
 command = "python {} --input_type=image_tensor --pipeline_config_path={} --trained_checkpoint_dir={} --output_directory={}".format(FREEZE_SCRIPT ,files['PIPELINE_CONFIG'], paths['CHECKPOINT_PATH'], paths['OUTPUT_PATH'])
-
-print(command)
+os.system(command)
+#print(command)
 '''
 !{command}
 '''
@@ -314,8 +314,9 @@ print(command)
 os.system('pip install tensorflowjs')
 
 command = "tensorflowjs_converter --input_format=tf_saved_model --output_node_names='detection_boxes,detection_classes,detection_features,detection_multiclass_scores,detection_scores,num_detections,raw_detection_boxes,raw_detection_scores' --output_format=tfjs_graph_model --signature_name=serving_default {} {}".format(os.path.join(paths['OUTPUT_PATH'], 'saved_model'), paths['TFJS_PATH'])
+os.system(command)
 
-print(command)
+#print(command)
 '''
 !{command}
 '''
@@ -326,8 +327,8 @@ print(command)
 TFLITE_SCRIPT = os.path.join(paths['APIMODEL_PATH'], 'research', 'object_detection', 'export_tflite_graph_tf2.py ')
 
 command = "python {} --pipeline_config_path={} --trained_checkpoint_dir={} --output_directory={}".format(TFLITE_SCRIPT ,files['PIPELINE_CONFIG'], paths['CHECKPOINT_PATH'], paths['TFLITE_PATH'])
-
-print(command)
+os.system(command)
+#print(command)
 '''
 !{command}
 '''
@@ -344,7 +345,9 @@ command = "tflite_convert \
 --inference_type=FLOAT \
 --allow_custom_ops".format(FROZEN_TFLITE_PATH, TFLITE_MODEL, )
 
-print(command)
+os.system(command)
+
+#print(command)
 '''
 !{command}
 '''
