@@ -222,10 +222,13 @@ plt.show()
 
 category_index = label_map_util.create_category_index_from_labelmap(files['LABELMAP'])
 
-IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
+#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
+IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'prova_scritte.jpg')
+
 
 img = cv2.imread(IMAGE_PATH)
 image_np = np.array(img)
+
 
 input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
 detections = detect_fn(input_tensor)
@@ -254,6 +257,16 @@ viz_utils.visualize_boxes_and_labels_on_image_array(
 
 plt.imshow(cv2.cvtColor(image_np_with_detections, cv2.COLOR_BGR2RGB))
 plt.show()
+
+###########
+import pytesseract
+pytesseract.pytesseract.tesseract_cmd='C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
+
+img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+#cv2.imshow('RESULT',img)
+print(pytesseract.image_to_string(img))
+
+
 
 # 10. Real Time Detections from your Webcam
 

@@ -47,6 +47,6 @@ command = "python {} --input_type=image_tensor --pipeline_config_path={} --train
 
 print(command)
 
-
-
+for x in range(10):
+	print(x)
 
