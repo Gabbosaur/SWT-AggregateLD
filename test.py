@@ -1,52 +1,72 @@
-import os
+import cv2
+import pytesseract
+pytesseract.pytesseract.tesseract_cmd='C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 
-os.system('cd C:\\Users\\luca\\Desktop\\tensorflow_object_detaction\\TFODCourse\\')
-os.system('ls')
-files = {
-    'PIPELINE_CONFIG':"a",
-    'TF_RECORD_SCRIPT': "b", 
-    'LABELMAP': "c"
-}
-print(files['TF_RECORD_SCRIPT'])
+from dataclasses import dataclass
 
-import os
+@dataclass
+class Record:
+    num_frame: int
+    time: float
+    list_words: list
 
-#os.system('cd C:\\Users\\luca\\Desktop\\tensorflow_object_detaction\\TFODCourse')
-#os.system('.\tfod\Scripts\activate')
+listOfRecords=[]
+video = cv2.VideoCapture('prova.mp4')
+i = 0
+# a variable to set how many frames you want to skip
+fps = video.get(cv2.CAP_PROP_FPS)
+frame_skip = fps*5 #un frame ogni 5 secondi
+frame_counter=0
+temp=1/fps
 
+count_frame_doppi=0
 
-CUSTOM_MODEL_NAME = 'my_ssd_mobnet' 
-PRETRAINED_MODEL_NAME = 'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8'
-PRETRAINED_MODEL_URL = 'http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8.tar.gz'
-TF_RECORD_SCRIPT_NAME = 'generate_tfrecord.py'
-LABEL_MAP_NAME = 'label_map.pbtxt'
+while video.isOpened():
+	ret, frame = video.read()
+	if not ret:
+		break
+	if i > frame_skip - 1:
+		#cv2.imwrite('test_'+str(i)+'.jpg', frame)
+		#print(pytesseract.image_to_string(frame))
+		temp_list_words=[]
+		boxes=pytesseract.image_to_data(frame)
+		frame_counter+=frame_skip
+		#print("frame number: " + str(frame_counter))
+		for x,b in enumerate(boxes.splitlines()):
+			if x!=0:
+				b=b.split()
+				if len(b)==12:
+					#print(b[11])
+					#lista delle parole
+					temp_list_words.append(b[11])
+		#struct con numero del frame e la lista di parole
+		rec=Record(frame_counter,frame_counter*temp,temp_list_words)
+		#controlliamo se questo identico record è già contenuto nella lista
+		#potrebbe essere dispendioso, facciamo solo il compare con l'ultimo frame in listOfRecords?
+		flag=False
+		for y in listOfRecords:
+			if(y.list_words == rec.list_words):
+				flag=True
+				count_frame_doppi += 1
+				break
 
-paths = {
-    'WORKSPACE_PATH': os.path.join('Tensorflow', 'workspace'),
-    'SCRIPTS_PATH': os.path.join('Tensorflow','scripts'),
-    'APIMODEL_PATH': os.path.join('Tensorflow','models'),
-    'ANNOTATION_PATH': os.path.join('Tensorflow', 'workspace','annotations'),
-    'IMAGE_PATH': os.path.join('Tensorflow', 'workspace','images'),
-    'MODEL_PATH': os.path.join('Tensorflow', 'workspace','models'),
-    'PRETRAINED_MODEL_PATH': os.path.join('Tensorflow', 'workspace','pre-trained-models'),
-    'CHECKPOINT_PATH': os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME), 
-    'OUTPUT_PATH': os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'export'), 
-    'TFJS_PATH':os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'tfjsexport'), 
-    'TFLITE_PATH':os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'tfliteexport'), 
-    'PROTOC_PATH':os.path.join('Tensorflow','protoc')
- }
+		if(flag==False):
+			listOfRecords.append(rec)
+		i = 0
+		continue
+	i += 1
 
-files = {
-    'PIPELINE_CONFIG':os.path.join('Tensorflow', 'workspace','models', CUSTOM_MODEL_NAME, 'pipeline.config'),
-    'TF_RECORD_SCRIPT': os.path.join(paths['SCRIPTS_PATH'], TF_RECORD_SCRIPT_NAME), 
-    'LABELMAP': os.path.join(paths['ANNOTATION_PATH'], LABEL_MAP_NAME)
-}
+video.release()
+cv2.destroyAllWindows()
 
-FREEZE_SCRIPT = os.path.join(paths['APIMODEL_PATH'], 'research', 'object_detection', 'exporter_main_v2.py ')
-command = "python {} --input_type=image_tensor --pipeline_config_path={} --trained_checkpoint_dir={} --output_directory={}".format(FREEZE_SCRIPT ,files['PIPELINE_CONFIG'], paths['CHECKPOINT_PATH'], paths['OUTPUT_PATH'])
+#print(listOfRecords)
+for y in listOfRecords:
+	duration=y.time
+	minutes = int(duration/60)
+	seconds = int(duration%60)
+	print('duration (M:S) = ' + str(minutes) + ':' + str(seconds))
+	print(y.list_words)
 
-print(command)
-
-for x in range(10):
-	print(x)
+print("frame doppi:"+ str(count_frame_doppi))
+#print(listOfRecords[0])
 
