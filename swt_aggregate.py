@@ -8,7 +8,7 @@ problemi:
 import os
 
 #os.system('cd C:\\Users\\luca\\Desktop\\tensorflow_object_detaction\\TFODCourse')
-os.system('.\tfod\Scripts\activate')
+#os.system('.\tfod\Scripts\activate')
 
 
 CUSTOM_MODEL_NAME = 'my_ssd_mobnet' 
@@ -121,18 +121,19 @@ if os.path.exists(ARCHIVE_FILES):
 if not os.path.exists(files['TF_RECORD_SCRIPT']):
     os.system('git clone https://github.com/nicknochnack/GenerateTFRecord {'+paths['SCRIPTS_PATH']+'}')
 
-#################################################################################################################
-os.system('python {'+ files['TF_RECORD_SCRIPT'] +'} -x {os.path.join('+paths['IMAGE_PATH']+', \'train\')} -l {' + files['LABELMAP'] + '} -o {os.path.join(' + paths['ANNOTATION_PATH'] + ', \'train.record\')} ')
+command="python {} -x {} -l {} -o {}".format(files['TF_RECORD_SCRIPT'],os.path.join(paths['IMAGE_PATH'], 'train'),files['LABELMAP'],os.path.join(paths['ANNOTATION_PATH'], 'train.record'))
+os.system(command)
 
-os.system('python {'+ files['TF_RECORD_SCRIPT'] +'} -x {os.path.join('+paths['IMAGE_PATH']+', \'test\')} -l {'+files['LABELMAP']+'} -o {os.path.join('+paths['ANNOTATION_PATH']+', \'test.record\')} ')
-
+command="python {} -x {} -l {} -o {}".format(files['TF_RECORD_SCRIPT'],os.path.join(paths['IMAGE_PATH'], 'test'),files['LABELMAP'],os.path.join(paths['ANNOTATION_PATH'], 'test.record'))
+os.system(command)
 
 # 4. Copy Model Config to Training Folder
 
 if os.name =='posix':
 	os.system('cp {os.path.join('+ paths['PRETRAINED_MODEL_PATH']+', '+PRETRAINED_MODEL_NAME+', \'pipeline.config\')} {os.path.join('+paths['CHECKPOINT_PATH']+')}')
 if os.name == 'nt':
-    os.system('copy {os.path.join('+paths['PRETRAINED_MODEL_PATH']+', '+PRETRAINED_MODEL_NAME+', \'pipeline.config\')} {os.path.join('+paths['CHECKPOINT_PATH']+')}')
+	command="copy {} {}".format(os.path.join(paths['PRETRAINED_MODEL_PATH'], PRETRAINED_MODEL_NAME,'pipeline.config'),os.path.join(paths['CHECKPOINT_PATH']))
+	os.system(command)
 
 # 5. Update Config For Transfer Learning
 
@@ -217,13 +218,15 @@ paths['CHECKPOINT_PATH']
 import cv2 
 import numpy as np
 from matplotlib import pyplot as plt
+import matplotlib
+matplotlib.use("TkAgg")
 #%matplotlib inline
 plt.show()
 
 category_index = label_map_util.create_category_index_from_labelmap(files['LABELMAP'])
 
-#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
-IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'prova_scritte.jpg')
+IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
+#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'prova_scritte.jpg')
 
 
 img = cv2.imread(IMAGE_PATH)
