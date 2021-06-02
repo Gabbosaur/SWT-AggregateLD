@@ -143,6 +143,7 @@ from object_detection.protos import pipeline_pb2
 from google.protobuf import text_format
 
 
+
 config = config_util.get_configs_from_pipeline_file(files['PIPELINE_CONFIG'])
 
 
@@ -222,6 +223,8 @@ import matplotlib
 matplotlib.use("TkAgg")
 #%matplotlib inline
 plt.show()
+
+
 
 category_index = label_map_util.create_category_index_from_labelmap(files['LABELMAP'])
 
