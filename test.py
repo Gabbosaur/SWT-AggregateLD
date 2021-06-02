@@ -255,6 +255,7 @@ print("YOLO LOADED")
 
 # Capture frame-by-frame
 IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
+#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsup.fd7cdb14-b4d4-11eb-b662-240a64b78789.jpg')
 img = cv2.imread(IMAGE_PATH)
 #img=cv2.imread("test_img.jpg")
 img = cv2.resize(img, None, fx=0.4, fy=0.4)
@@ -317,225 +318,20 @@ for i in range(len(boxes)):
 cv2.imshow("Image",img)
 cv2.waitKey(0)
 
-if(isPerson==True):
-	print("PERSONA RICONOSCIUTA")
-	
-	category_index = label_map_util.create_category_index_from_labelmap(files['LABELMAP'])
-	#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
-	#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'prova_scritte.jpg')
+import yolov5
+import torch
+YOLOV5_model=os.path.join('tfod', 'Lib','site-packages', 'yolov5' ,'models', 'yolov5s.yaml'),
+#model
+print(os.getcwd())
+#model = yolov5.load(YOLOV5_model)
+#model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
+model = yolov5.load('yolov5s.pt')
 
-	img = cv2.imread(IMAGE_PATH)
-	image_np = np.array(img)
+img = cv2.imread(IMAGE_PATH)
 
-	input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
-	detections = detect_fn(input_tensor)
+# inference
+#results = model(img)
+results = model(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), size=400)
+# show results
+results.show()
 
-	num_detections = int(detections.pop('num_detections'))
-	detections = {key: value[0, :num_detections].numpy()
-				for key, value in detections.items()}
-	detections['num_detections'] = num_detections
-
-	# detection_classes should be ints.
-	detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
-
-	label_id_offset = 1
-	image_np_with_detections = image_np.copy()
-
-	viz_utils.visualize_boxes_and_labels_on_image_array(
-				image_np_with_detections,
-				detections['detection_boxes'],
-				detections['detection_classes']+label_id_offset,
-				detections['detection_scores'],
-				category_index,
-				use_normalized_coordinates=True,
-				max_boxes_to_draw=5,
-				min_score_thresh=.8,
-				agnostic_mode=False)
-
-	plt.imshow(cv2.cvtColor(image_np_with_detections, cv2.COLOR_BGR2RGB))
-	plt.show()
-
-else:
-	print("PERSONA NON RICONOSCIUTA")
-
-
-
-
-
-
-###frame from video with words detection
-import pytesseract
-pytesseract.pytesseract.tesseract_cmd='C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
-
-
-from dataclasses import dataclass
-
-@dataclass
-class Record:
-    num_frame: int
-    time: float
-    list_words: list
-
-listOfRecords=[]
-video = cv2.VideoCapture('prova.mp4')
-i = 0
-# a variable to set how many frames you want to skip
-fps = video.get(cv2.CAP_PROP_FPS)
-frame_skip = fps*5 #un frame ogni 5 secondi
-frame_counter=0
-temp=1/fps
-
-count_frame_doppi=0
-
-while video.isOpened():
-	ret, frame = video.read()
-	if not ret:
-		break
-	if i > frame_skip - 1:
-		#cv2.imwrite('test_'+str(i)+'.jpg', frame)
-		#print(pytesseract.image_to_string(frame))
-		temp_list_words=[]
-		boxes=pytesseract.image_to_data(frame)
-		frame_counter+=frame_skip
-		#print("frame number: " + str(frame_counter))
-		for x,b in enumerate(boxes.splitlines()):
-			if x!=0:
-				b=b.split()
-				if len(b)==12:
-					#print(b[11])
-					#lista delle parole
-					temp_list_words.append(b[11])
-		#struct con numero del frame e la lista di parole
-		rec=Record(frame_counter,frame_counter*temp,temp_list_words)
-		#controlliamo se questo identico record è già contenuto nella lista
-		#potrebbe essere dispendioso, facciamo solo il compare con l'ultimo frame in listOfRecords?
-		flag=False
-		for y in listOfRecords:
-			if(y.list_words == rec.list_words):
-				flag=True
-				count_frame_doppi += 1
-				break
-
-		if(flag==False):
-			listOfRecords.append(rec)
-		i = 0
-		continue
-	i += 1
-
-video.release()
-cv2.destroyAllWindows()
-
-#print(listOfRecords)
-for y in listOfRecords:
-	duration=y.time
-	minutes = int(duration/60)
-	seconds = int(duration%60)
-	print('duration (M:S) = ' + str(minutes) + ':' + str(seconds))
-	print(y.list_words)
-
-#print("frame doppi:"+ str(count_frame_doppi))
-#print(listOfRecords[0])
-
-# 10. Real Time Detections from your Webcam
-
-os.system('pip uninstall opencv-python-headless -y')
-
-cap = cv2.VideoCapture(0)
-width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-while cap.isOpened(): 
-    ret, frame = cap.read()
-    image_np = np.array(frame)
-    
-    input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
-    detections = detect_fn(input_tensor)
-    
-    num_detections = int(detections.pop('num_detections'))
-    detections = {key: value[0, :num_detections].numpy()
-                  for key, value in detections.items()}
-    detections['num_detections'] = num_detections
-
-    # detection_classes should be ints.
-    detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
-
-    label_id_offset = 1
-    image_np_with_detections = image_np.copy()
-
-    viz_utils.visualize_boxes_and_labels_on_image_array(
-                image_np_with_detections,
-                detections['detection_boxes'],
-                detections['detection_classes']+label_id_offset,
-                detections['detection_scores'],
-                category_index,
-                use_normalized_coordinates=True,
-                max_boxes_to_draw=5,
-                min_score_thresh=.8,
-                agnostic_mode=False)
-
-    cv2.imshow('object detection',  cv2.resize(image_np_with_detections, (800, 600)))
-    
-    if cv2.waitKey(10) & 0xFF == ord('q'):
-        cap.release()
-        cv2.destroyAllWindows()
-        break
-
-# 10. Freezing the Graph
-
-FREEZE_SCRIPT = os.path.join(paths['APIMODEL_PATH'], 'research', 'object_detection', 'exporter_main_v2.py ')
-
-command = "python {} --input_type=image_tensor --pipeline_config_path={} --trained_checkpoint_dir={} --output_directory={}".format(FREEZE_SCRIPT ,files['PIPELINE_CONFIG'], paths['CHECKPOINT_PATH'], paths['OUTPUT_PATH'])
-os.system(command)
-#print(command)
-'''
-!{command}
-'''
-# 11. Conversion to TFJS
-
-os.system('pip install tensorflowjs')
-
-command = "tensorflowjs_converter --input_format=tf_saved_model --output_node_names='detection_boxes,detection_classes,detection_features,detection_multiclass_scores,detection_scores,num_detections,raw_detection_boxes,raw_detection_scores' --output_format=tfjs_graph_model --signature_name=serving_default {} {}".format(os.path.join(paths['OUTPUT_PATH'], 'saved_model'), paths['TFJS_PATH'])
-os.system(command)
-
-#print(command)
-'''
-!{command}
-'''
-# Test Code: https://github.com/nicknochnack/RealTimeSignLanguageDetectionwithTFJS
-
-# 12. Conversion to TFLite
-
-TFLITE_SCRIPT = os.path.join(paths['APIMODEL_PATH'], 'research', 'object_detection', 'export_tflite_graph_tf2.py ')
-
-command = "python {} --pipeline_config_path={} --trained_checkpoint_dir={} --output_directory={}".format(TFLITE_SCRIPT ,files['PIPELINE_CONFIG'], paths['CHECKPOINT_PATH'], paths['TFLITE_PATH'])
-os.system(command)
-#print(command)
-'''
-!{command}
-'''
-
-FROZEN_TFLITE_PATH = os.path.join(paths['TFLITE_PATH'], 'saved_model')
-TFLITE_MODEL = os.path.join(paths['TFLITE_PATH'], 'saved_model', 'detect.tflite')
-
-command = "tflite_convert \
---saved_model_dir={} \
---output_file={} \
---input_shapes=1,300,300,3 \
---input_arrays=normalized_input_image_tensor \
---output_arrays='TFLite_Detection_PostProcess','TFLite_Detection_PostProcess:1','TFLite_Detection_PostProcess:2','TFLite_Detection_PostProcess:3' \
---inference_type=FLOAT \
---allow_custom_ops".format(FROZEN_TFLITE_PATH, TFLITE_MODEL, )
-
-os.system(command)
-
-#print(command)
-'''
-!{command}
-'''
-# 13. Zip and Export Models 
-
-os.system('tar -czf models.tar.gz {paths[\'CHECKPOINT_PATH\']}')
-'''
-from google.colab import drive
-drive.mount('/content/drive')
-'''
