@@ -249,8 +249,8 @@ print(os.getcwd())
 #model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 model = yolov5.load('yolov5s.pt')
 
-#img = cv2.imread(IMAGE_PATH)
-img=cv2.imread("test_img1.jpg")
+img = cv2.imread(IMAGE_PATH)
+#img=cv2.imread("test_img.jpg")
 
 # inference
 #results = model(img)
