@@ -234,8 +234,8 @@ import matplotlib
 matplotlib.use("TkAgg")
 #%matplotlib inline
 plt.show()
-
-#######################################
+'''
+#######################################TOLO V3
 # Load Yolo
 print("LOADING YOLO")
 net = cv2.dnn.readNet(files['YOLOV3_SPP_WEIGHTS'], files['YOLOV3_CFG'])
@@ -265,11 +265,11 @@ height, width, channels = img.shape
 #blob = cv2.dnn.blobFromImage(img, 1 / 255.0, (416, 416),swapRB=True, crop=False)
 
 blob = cv2.dnn.blobFromImage(img, scalefactor=0.00392, size=(320, 320), mean=(0, 0, 0), swapRB=True, crop=False)
-'''
-for b in blob:
-	for n,img_blob in enumerate(b):
-		cv2.imshow(str(n),img_blob)
-'''
+
+#for b in blob:
+#	for n,img_blob in enumerate(b):
+#		cv2.imshow(str(n),img_blob)
+
 #Detecting objects
 net.setInput(blob)
 outs = net.forward(output_layers)
@@ -317,10 +317,48 @@ for i in range(len(boxes)):
 
 cv2.imshow("Image",img)
 cv2.waitKey(0)
+'''
+#######################################YOLO V5
+isPerson=False
+
+import yolov5
+import torch
+
+IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
+
+YOLOV5_model=os.path.join('tfod', 'Lib','site-packages', 'yolov5' ,'models', 'yolov5s.yaml'),
+#model
+print(os.getcwd())
+#model = yolov5.load(YOLOV5_model)
+#model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
+model = yolov5.load('yolov5s.pt')
+
+img = cv2.imread(IMAGE_PATH)
+
+
+# inference
+#results = model(img)
+
+results = model(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), size=400)
+
+results = model(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), size=400)
+
+labels, cord_thres = results.xyxyn[0][:, -1].numpy(), results.xyxyn[0][:, :-1].numpy()
+classes = model.names
+# show results
+for i in labels:
+	print(classes[int(i)])
+	if(classes[int(i)]=="person"):
+		isPerson=True
+
+# show results
+results.print()
+results.show()
+
+
 
 if(isPerson==True):
 	print("PERSONA RICONOSCIUTA")
-	
 	category_index = label_map_util.create_category_index_from_labelmap(files['LABELMAP'])
 	#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
 	#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'prova_scritte.jpg')

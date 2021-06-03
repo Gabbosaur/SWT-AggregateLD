@@ -236,90 +236,12 @@ matplotlib.use("TkAgg")
 plt.show()
 
 #######################################
-# Load Yolo
-print("LOADING YOLO")
-net = cv2.dnn.readNet(files['YOLOV3_SPP_WEIGHTS'], files['YOLOV3_CFG'])
-#save all the names in file o the list classes
-classes = []
-with open(files['COCO_NAMES'], "r") as f:
-    classes = [line.strip() for line in f.readlines()]
 
-print(classes)
-
-#get layers of the network
-layer_names = net.getLayerNames()
-#Determine the output layer names from the YOLO model 
-output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
-print("YOLO LOADED")
-
-
-# Capture frame-by-frame
-IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
-#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsup.fd7cdb14-b4d4-11eb-b662-240a64b78789.jpg')
-img = cv2.imread(IMAGE_PATH)
-#img=cv2.imread("test_img.jpg")
-img = cv2.resize(img, None, fx=0.4, fy=0.4)
-height, width, channels = img.shape
-
-# USing blob function of opencv to preprocess image
-#blob = cv2.dnn.blobFromImage(img, 1 / 255.0, (416, 416),swapRB=True, crop=False)
-
-blob = cv2.dnn.blobFromImage(img, scalefactor=0.00392, size=(320, 320), mean=(0, 0, 0), swapRB=True, crop=False)
-'''
-for b in blob:
-	for n,img_blob in enumerate(b):
-		cv2.imshow(str(n),img_blob)
-'''
-#Detecting objects
-net.setInput(blob)
-outs = net.forward(output_layers)
-
-
-# Showing informations on the screen
-class_ids = []
-confidences = []
-boxes = []
-for out in outs:
-	for detection in out:
-		scores = detection[5:]
-		class_id = np.argmax(scores)
-		confidence = scores[class_id]
-		if confidence > 0.3:
-			# Object detected
-			center_x = int(detection[0] * width)
-			center_y = int(detection[1] * height)
-			w = int(detection[2] * width)
-			h = int(detection[3] * height)
-
-			# Rectangle coordinates
-			x = int(center_x - w / 2)
-			y = int(center_y - h / 2)
-
-			boxes.append([x, y, w, h])
-			confidences.append(float(confidence))
-			class_ids.append(class_id)
-
-
-isPerson=False
-#We use NMS function in opencv to perform Non-maximum Suppression
-#we give it score threshold and nms threshold as arguments.
-indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.4, 0.6)
-colors = np.random.uniform(0, 255, size=(len(classes), 3))
-for i in range(len(boxes)):
-	if i in indexes:
-		x, y, w, h = boxes[i]
-		label = str(classes[class_ids[i]])
-		if(label=="person"):
-			isPerson=True
-		color = colors[class_ids[i]]
-		cv2.rectangle(img, (x, y), (x + w, y + h), color, 2)
-		cv2.putText(img, label, (x, y -5),cv2.FONT_HERSHEY_SIMPLEX,1/2, color, 2)
-
-cv2.imshow("Image",img)
-cv2.waitKey(0)
 
 import yolov5
 import torch
+IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
+
 YOLOV5_model=os.path.join('tfod', 'Lib','site-packages', 'yolov5' ,'models', 'yolov5s.yaml'),
 #model
 print(os.getcwd())
@@ -327,11 +249,28 @@ print(os.getcwd())
 #model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 model = yolov5.load('yolov5s.pt')
 
-img = cv2.imread(IMAGE_PATH)
+#img = cv2.imread(IMAGE_PATH)
+img=cv2.imread("test_img1.jpg")
 
 # inference
 #results = model(img)
+
 results = model(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), size=400)
+
+labels, cord_thres = results.xyxyn[0][:, -1].numpy(), results.xyxyn[0][:, :-1].numpy()
+classes = model.names
 # show results
+for i in labels:
+	print(classes[int(i)])
+	if(classes[int(i)]=="person"):
+		isPerson=True
+
+results.print()
+
 results.show()
 
+
+'''
+command="python {} --source {}".format(os.path.join("tfod","Lib","site-packages","yolov5",'detect.py'),"dublin.mp4")
+os.system(command)
+'''
