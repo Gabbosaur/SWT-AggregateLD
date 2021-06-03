@@ -25,7 +25,7 @@ paths = {
     'IMAGE_PATH': os.path.join('Tensorflow', 'workspace','images'),
     'MODEL_PATH': os.path.join('Tensorflow', 'workspace','models'),
     'PRETRAINED_MODEL_PATH': os.path.join('Tensorflow', 'workspace','pre-trained-models'),
-    'CHECKPOINT_PATH': os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME), 
+    'CHECKPOINT_PATH': os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME),
     'OUTPUT_PATH': os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'export'), 
     'TFJS_PATH':os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'tfjsexport'), 
     'TFLITE_PATH':os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'tfliteexport'), 
@@ -34,6 +34,10 @@ paths = {
 
 files = {
     'PIPELINE_CONFIG':os.path.join('Tensorflow', 'workspace','models', CUSTOM_MODEL_NAME, 'pipeline.config'),
+	'COCO_NAMES':os.path.join('Tensorflow', 'workspace','pre-trained-models', 'yolo_V3' , 'coco.names'),
+	'YOLOV3_CFG':os.path.join('Tensorflow', 'workspace','pre-trained-models', 'yolo_V3' , 'yolov3.cfg'),
+	'YOLOV3_SPP_WEIGHTS':os.path.join('Tensorflow', 'workspace','pre-trained-models', 'yolo_V3' , 'yolov3.weights'),
+	'PRETRAINED_MODEL':os.path.join('Tensorflow', 'workspace','pre-trained-models', PRETRAINED_MODEL_NAME,'saved_model'),
     'TF_RECORD_SCRIPT': os.path.join(paths['SCRIPTS_PATH'], TF_RECORD_SCRIPT_NAME), 
     'LABELMAP': os.path.join(paths['ANNOTATION_PATH'], LABEL_MAP_NAME)
 }
@@ -214,6 +218,13 @@ def detect_fn(image):
 paths['CHECKPOINT_PATH']
 
 
+##########################
+
+#pretrained_model = tf.saved_model.load(files['PRETRAINED_MODEL'])
+
+
+
+
 # 9. Detect from an Image
 
 import cv2 
@@ -224,45 +235,134 @@ matplotlib.use("TkAgg")
 #%matplotlib inline
 plt.show()
 
+#######################################
+# Load Yolo
+print("LOADING YOLO")
+net = cv2.dnn.readNet(files['YOLOV3_SPP_WEIGHTS'], files['YOLOV3_CFG'])
+#save all the names in file o the list classes
+classes = []
+with open(files['COCO_NAMES'], "r") as f:
+    classes = [line.strip() for line in f.readlines()]
+
+print(classes)
+
+#get layers of the network
+layer_names = net.getLayerNames()
+#Determine the output layer names from the YOLO model 
+output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+print("YOLO LOADED")
 
 
-category_index = label_map_util.create_category_index_from_labelmap(files['LABELMAP'])
-
+# Capture frame-by-frame
 IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
-#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'prova_scritte.jpg')
-
-
+#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsup.fd7cdb14-b4d4-11eb-b662-240a64b78789.jpg')
 img = cv2.imread(IMAGE_PATH)
-image_np = np.array(img)
+#img=cv2.imread("test_img.jpg")
+img = cv2.resize(img, None, fx=0.4, fy=0.4)
+height, width, channels = img.shape
+
+# USing blob function of opencv to preprocess image
+#blob = cv2.dnn.blobFromImage(img, 1 / 255.0, (416, 416),swapRB=True, crop=False)
+
+blob = cv2.dnn.blobFromImage(img, scalefactor=0.00392, size=(320, 320), mean=(0, 0, 0), swapRB=True, crop=False)
+'''
+for b in blob:
+	for n,img_blob in enumerate(b):
+		cv2.imshow(str(n),img_blob)
+'''
+#Detecting objects
+net.setInput(blob)
+outs = net.forward(output_layers)
 
 
-input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
-detections = detect_fn(input_tensor)
+# Showing informations on the screen
+class_ids = []
+confidences = []
+boxes = []
+for out in outs:
+	for detection in out:
+		scores = detection[5:]
+		class_id = np.argmax(scores)
+		confidence = scores[class_id]
+		if confidence > 0.3:
+			# Object detected
+			center_x = int(detection[0] * width)
+			center_y = int(detection[1] * height)
+			w = int(detection[2] * width)
+			h = int(detection[3] * height)
 
-num_detections = int(detections.pop('num_detections'))
-detections = {key: value[0, :num_detections].numpy()
-              for key, value in detections.items()}
-detections['num_detections'] = num_detections
+			# Rectangle coordinates
+			x = int(center_x - w / 2)
+			y = int(center_y - h / 2)
 
-# detection_classes should be ints.
-detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
+			boxes.append([x, y, w, h])
+			confidences.append(float(confidence))
+			class_ids.append(class_id)
 
-label_id_offset = 1
-image_np_with_detections = image_np.copy()
 
-viz_utils.visualize_boxes_and_labels_on_image_array(
-            image_np_with_detections,
-            detections['detection_boxes'],
-            detections['detection_classes']+label_id_offset,
-            detections['detection_scores'],
-            category_index,
-            use_normalized_coordinates=True,
-            max_boxes_to_draw=5,
-            min_score_thresh=.8,
-            agnostic_mode=False)
+isPerson=False
+#We use NMS function in opencv to perform Non-maximum Suppression
+#we give it score threshold and nms threshold as arguments.
+indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.4, 0.6)
+colors = np.random.uniform(0, 255, size=(len(classes), 3))
+for i in range(len(boxes)):
+	if i in indexes:
+		x, y, w, h = boxes[i]
+		label = str(classes[class_ids[i]])
+		if(label=="person"):
+			isPerson=True
+		color = colors[class_ids[i]]
+		cv2.rectangle(img, (x, y), (x + w, y + h), color, 2)
+		cv2.putText(img, label, (x, y -5),cv2.FONT_HERSHEY_SIMPLEX,1/2, color, 2)
 
-plt.imshow(cv2.cvtColor(image_np_with_detections, cv2.COLOR_BGR2RGB))
-plt.show()
+cv2.imshow("Image",img)
+cv2.waitKey(0)
+
+if(isPerson==True):
+	print("PERSONA RICONOSCIUTA")
+	
+	category_index = label_map_util.create_category_index_from_labelmap(files['LABELMAP'])
+	#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
+	#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'prova_scritte.jpg')
+
+	img = cv2.imread(IMAGE_PATH)
+	image_np = np.array(img)
+
+	input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
+	detections = detect_fn(input_tensor)
+
+	num_detections = int(detections.pop('num_detections'))
+	detections = {key: value[0, :num_detections].numpy()
+				for key, value in detections.items()}
+	detections['num_detections'] = num_detections
+
+	# detection_classes should be ints.
+	detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
+
+	label_id_offset = 1
+	image_np_with_detections = image_np.copy()
+
+	viz_utils.visualize_boxes_and_labels_on_image_array(
+				image_np_with_detections,
+				detections['detection_boxes'],
+				detections['detection_classes']+label_id_offset,
+				detections['detection_scores'],
+				category_index,
+				use_normalized_coordinates=True,
+				max_boxes_to_draw=5,
+				min_score_thresh=.8,
+				agnostic_mode=False)
+
+	plt.imshow(cv2.cvtColor(image_np_with_detections, cv2.COLOR_BGR2RGB))
+	plt.show()
+
+else:
+	print("PERSONA NON RICONOSCIUTA")
+
+
+
+
+
 
 ###frame from video with words detection
 import pytesseract
