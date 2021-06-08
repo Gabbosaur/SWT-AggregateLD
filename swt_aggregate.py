@@ -326,12 +326,11 @@ import torch
 
 IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
 
-YOLOV5_model=os.path.join('tfod', 'Lib','site-packages', 'yolov5' ,'models', 'yolov5s.yaml'),
-#model
+# YOLOV5_model=os.path.join('tfod', 'Lib','site-packages', 'yolov5' ,'models', 'yolov5s.yaml'),
 print(os.getcwd())
-#model = yolov5.load(YOLOV5_model)
-#model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
-model = yolov5.load('yolov5s.pt')
+# model = yolov5.load(YOLOV5_model) # carico modello tramite formato yaml, però non funziona
+# model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True) # scarico il modello
+model = yolov5.load('yolov5s.pt') # se ho il modello in locale
 
 img = cv2.imread(IMAGE_PATH)
 
@@ -341,9 +340,7 @@ img = cv2.imread(IMAGE_PATH)
 
 results = model(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), size=400)
 
-results = model(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), size=400)
-
-labels, cord_thres = results.xyxyn[0][:, -1].numpy(), results.xyxyn[0][:, :-1].numpy()
+labels, cord_thres = results.xyxyn[0][:, -1].numpy(), results.xyxyn[0][:, :-1].numpy() # estraggo labels e coordinate dei rettangoli
 classes = model.names
 # show results
 for i in labels:
