@@ -18,28 +18,28 @@ TF_RECORD_SCRIPT_NAME = 'generate_tfrecord.py'
 LABEL_MAP_NAME = 'label_map.pbtxt'
 
 paths = {
-    'WORKSPACE_PATH': os.path.join('Tensorflow', 'workspace'),
-    'SCRIPTS_PATH': os.path.join('Tensorflow','scripts'),
-    'APIMODEL_PATH': os.path.join('Tensorflow','models'),
-    'ANNOTATION_PATH': os.path.join('Tensorflow', 'workspace','annotations'),
-    'IMAGE_PATH': os.path.join('Tensorflow', 'workspace','images'),
-    'MODEL_PATH': os.path.join('Tensorflow', 'workspace','models'),
-    'PRETRAINED_MODEL_PATH': os.path.join('Tensorflow', 'workspace','pre-trained-models'),
-    'CHECKPOINT_PATH': os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME),
-    'OUTPUT_PATH': os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'export'), 
-    'TFJS_PATH':os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'tfjsexport'), 
-    'TFLITE_PATH':os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'tfliteexport'), 
-    'PROTOC_PATH':os.path.join('Tensorflow','protoc')
+	'WORKSPACE_PATH': os.path.join('Tensorflow', 'workspace'),
+	'SCRIPTS_PATH': os.path.join('Tensorflow','scripts'),
+	'APIMODEL_PATH': os.path.join('Tensorflow','models'),
+	'ANNOTATION_PATH': os.path.join('Tensorflow', 'workspace','annotations'),
+	'IMAGE_PATH': os.path.join('Tensorflow', 'workspace','images'),
+	'MODEL_PATH': os.path.join('Tensorflow', 'workspace','models'),
+	'PRETRAINED_MODEL_PATH': os.path.join('Tensorflow', 'workspace','pre-trained-models'),
+	'CHECKPOINT_PATH': os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME),
+	'OUTPUT_PATH': os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'export'), 
+	'TFJS_PATH':os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'tfjsexport'), 
+	'TFLITE_PATH':os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'tfliteexport'), 
+	'PROTOC_PATH':os.path.join('Tensorflow','protoc')
  }
 
 files = {
-    'PIPELINE_CONFIG':os.path.join('Tensorflow', 'workspace','models', CUSTOM_MODEL_NAME, 'pipeline.config'),
+	'PIPELINE_CONFIG':os.path.join('Tensorflow', 'workspace','models', CUSTOM_MODEL_NAME, 'pipeline.config'),
 	'COCO_NAMES':os.path.join('Tensorflow', 'workspace','pre-trained-models', 'yolo_V3' , 'coco.names'),
 	'YOLOV3_CFG':os.path.join('Tensorflow', 'workspace','pre-trained-models', 'yolo_V3' , 'yolov3.cfg'),
 	'YOLOV3_SPP_WEIGHTS':os.path.join('Tensorflow', 'workspace','pre-trained-models', 'yolo_V3' , 'yolov3.weights'),
 	'PRETRAINED_MODEL':os.path.join('Tensorflow', 'workspace','pre-trained-models', PRETRAINED_MODEL_NAME,'saved_model'),
-    'TF_RECORD_SCRIPT': os.path.join(paths['SCRIPTS_PATH'], TF_RECORD_SCRIPT_NAME), 
-    'LABELMAP': os.path.join(paths['ANNOTATION_PATH'], LABEL_MAP_NAME)
+	'TF_RECORD_SCRIPT': os.path.join(paths['SCRIPTS_PATH'], TF_RECORD_SCRIPT_NAME), 
+	'LABELMAP': os.path.join(paths['ANNOTATION_PATH'], LABEL_MAP_NAME)
 }
 '''
 for path in paths.values():
@@ -54,8 +54,8 @@ for path in paths.values():
 # https://www.tensorflow.org/install/source_windows
 
 if os.name=='nt':
-    #os.system('pip install wget')
-    import wget
+	#os.system('pip install wget')
+	import wget
 
 
 
@@ -109,11 +109,11 @@ if os.name == 'nt':
 labels = [{'name':'ThumbsUp', 'id':1}, {'name':'ThumbsDown', 'id':2}, {'name':'ThankYou', 'id':3}, {'name':'LiveLong', 'id':4}]
 
 with open(files['LABELMAP'], 'w') as f:
-    for label in labels:
-        f.write('item { \n')
-        f.write('\tname:\'{}\'\n'.format(label['name']))
-        f.write('\tid:{}\n'.format(label['id']))
-        f.write('}\n')
+	for label in labels:
+		f.write('item { \n')
+		f.write('\tname:\'{}\'\n'.format(label['name']))
+		f.write('\tid:{}\n'.format(label['id']))
+		f.write('}\n')
 
 # 3. Create TF records
 
@@ -123,7 +123,7 @@ if os.path.exists(ARCHIVE_FILES):
   os.system('tar -zxvf {'+ARCHIVE_FILES+'}')
 
 if not os.path.exists(files['TF_RECORD_SCRIPT']):
-    os.system('git clone https://github.com/nicknochnack/GenerateTFRecord {'+paths['SCRIPTS_PATH']+'}')
+	os.system('git clone https://github.com/nicknochnack/GenerateTFRecord {'+paths['SCRIPTS_PATH']+'}')
 
 command="python {} -x {} -l {} -o {}".format(files['TF_RECORD_SCRIPT'],os.path.join(paths['IMAGE_PATH'], 'train'),files['LABELMAP'],os.path.join(paths['ANNOTATION_PATH'], 'train.record'))
 os.system(command)
@@ -153,8 +153,8 @@ config = config_util.get_configs_from_pipeline_file(files['PIPELINE_CONFIG'])
 
 pipeline_config = pipeline_pb2.TrainEvalPipelineConfig()
 with tf.io.gfile.GFile(files['PIPELINE_CONFIG'], "r") as f:
-    proto_str = f.read()
-    text_format.Merge(proto_str, pipeline_config)
+	proto_str = f.read()
+	text_format.Merge(proto_str, pipeline_config)
 
 pipeline_config.model.ssd.num_classes = len(labels)
 pipeline_config.train_config.batch_size = 4
@@ -167,7 +167,7 @@ pipeline_config.eval_input_reader[0].tf_record_input_reader.input_path[:] = [os.
 
 config_text = text_format.MessageToString(pipeline_config)
 with tf.io.gfile.GFile(files['PIPELINE_CONFIG'], "wb") as f:
-	    f.write(config_text)
+		f.write(config_text)
 
 # 6. Train the model
 '''
@@ -210,10 +210,10 @@ ckpt.restore(os.path.join(paths['CHECKPOINT_PATH'], 'ckpt-3')).expect_partial()
 
 @tf.function
 def detect_fn(image):
-    image, shapes = detection_model.preprocess(image)
-    prediction_dict = detection_model.predict(image, shapes)
-    detections = detection_model.postprocess(prediction_dict, shapes)
-    return detections
+	image, shapes = detection_model.preprocess(image)
+	prediction_dict = detection_model.predict(image, shapes)
+	detections = detection_model.postprocess(prediction_dict, shapes)
+	return detections
 
 paths['CHECKPOINT_PATH']
 
@@ -229,11 +229,12 @@ paths['CHECKPOINT_PATH']
 
 import cv2 
 import numpy as np
+import tkinter
 from matplotlib import pyplot as plt
 import matplotlib
 matplotlib.use("TkAgg")
 #%matplotlib inline
-plt.show()
+#plt.show()
 '''
 #######################################TOLO V3
 # Load Yolo
@@ -389,6 +390,7 @@ if(isPerson==True):
 				agnostic_mode=False)
 
 	plt.imshow(cv2.cvtColor(image_np_with_detections, cv2.COLOR_BGR2RGB))
+	plt.savefig("img_with_person.png")
 	plt.show()
 
 else:
@@ -408,9 +410,9 @@ from dataclasses import dataclass
 
 @dataclass
 class Record:
-    num_frame: int
-    time: float
-    list_words: list
+	num_frame: int
+	time: float
+	list_words: list
 
 listOfRecords=[]
 video = cv2.VideoCapture('prova.mp4')
@@ -474,104 +476,104 @@ for y in listOfRecords:
 
 # 10. Real Time Detections from your Webcam
 
-os.system('pip uninstall opencv-python-headless -y')
+# os.system('pip uninstall opencv-python-headless -y')
 
-cap = cv2.VideoCapture(0)
-width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+# cap = cv2.VideoCapture(0)
+# width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+# height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-while cap.isOpened(): 
-    ret, frame = cap.read()
-    image_np = np.array(frame)
+# while cap.isOpened(): 
+#     ret, frame = cap.read()
+#     image_np = np.array(frame)
     
-    input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
-    detections = detect_fn(input_tensor)
+#     input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
+#     detections = detect_fn(input_tensor)
     
-    num_detections = int(detections.pop('num_detections'))
-    detections = {key: value[0, :num_detections].numpy()
-                  for key, value in detections.items()}
-    detections['num_detections'] = num_detections
+#     num_detections = int(detections.pop('num_detections'))
+#     detections = {key: value[0, :num_detections].numpy()
+#                   for key, value in detections.items()}
+#     detections['num_detections'] = num_detections
 
-    # detection_classes should be ints.
-    detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
+#     # detection_classes should be ints.
+#     detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
 
-    label_id_offset = 1
-    image_np_with_detections = image_np.copy()
+#     label_id_offset = 1
+#     image_np_with_detections = image_np.copy()
 
-    viz_utils.visualize_boxes_and_labels_on_image_array(
-                image_np_with_detections,
-                detections['detection_boxes'],
-                detections['detection_classes']+label_id_offset,
-                detections['detection_scores'],
-                category_index,
-                use_normalized_coordinates=True,
-                max_boxes_to_draw=5,
-                min_score_thresh=.8,
-                agnostic_mode=False)
+#     viz_utils.visualize_boxes_and_labels_on_image_array(
+#                 image_np_with_detections,
+#                 detections['detection_boxes'],
+#                 detections['detection_classes']+label_id_offset,
+#                 detections['detection_scores'],
+#                 category_index,
+#                 use_normalized_coordinates=True,
+#                 max_boxes_to_draw=5,
+#                 min_score_thresh=.8,
+#                 agnostic_mode=False)
 
-    cv2.imshow('object detection',  cv2.resize(image_np_with_detections, (800, 600)))
+#     cv2.imshow('object detection',  cv2.resize(image_np_with_detections, (800, 600)))
     
-    if cv2.waitKey(10) & 0xFF == ord('q'):
-        cap.release()
-        cv2.destroyAllWindows()
-        break
+#     if cv2.waitKey(10) & 0xFF == ord('q'):
+#         cap.release()
+#         cv2.destroyAllWindows()
+#         break
 
-# 10. Freezing the Graph
+# # 10. Freezing the Graph
 
-FREEZE_SCRIPT = os.path.join(paths['APIMODEL_PATH'], 'research', 'object_detection', 'exporter_main_v2.py ')
+# FREEZE_SCRIPT = os.path.join(paths['APIMODEL_PATH'], 'research', 'object_detection', 'exporter_main_v2.py ')
 
-command = "python {} --input_type=image_tensor --pipeline_config_path={} --trained_checkpoint_dir={} --output_directory={}".format(FREEZE_SCRIPT ,files['PIPELINE_CONFIG'], paths['CHECKPOINT_PATH'], paths['OUTPUT_PATH'])
-os.system(command)
-#print(command)
-'''
-!{command}
-'''
-# 11. Conversion to TFJS
+# command = "python {} --input_type=image_tensor --pipeline_config_path={} --trained_checkpoint_dir={} --output_directory={}".format(FREEZE_SCRIPT ,files['PIPELINE_CONFIG'], paths['CHECKPOINT_PATH'], paths['OUTPUT_PATH'])
+# os.system(command)
+# #print(command)
+# '''
+# !{command}
+# '''
+# # 11. Conversion to TFJS
 
-os.system('pip install tensorflowjs')
+# os.system('pip install tensorflowjs')
 
-command = "tensorflowjs_converter --input_format=tf_saved_model --output_node_names='detection_boxes,detection_classes,detection_features,detection_multiclass_scores,detection_scores,num_detections,raw_detection_boxes,raw_detection_scores' --output_format=tfjs_graph_model --signature_name=serving_default {} {}".format(os.path.join(paths['OUTPUT_PATH'], 'saved_model'), paths['TFJS_PATH'])
-os.system(command)
+# command = "tensorflowjs_converter --input_format=tf_saved_model --output_node_names='detection_boxes,detection_classes,detection_features,detection_multiclass_scores,detection_scores,num_detections,raw_detection_boxes,raw_detection_scores' --output_format=tfjs_graph_model --signature_name=serving_default {} {}".format(os.path.join(paths['OUTPUT_PATH'], 'saved_model'), paths['TFJS_PATH'])
+# os.system(command)
 
-#print(command)
-'''
-!{command}
-'''
-# Test Code: https://github.com/nicknochnack/RealTimeSignLanguageDetectionwithTFJS
+# #print(command)
+# '''
+# !{command}
+# '''
+# # Test Code: https://github.com/nicknochnack/RealTimeSignLanguageDetectionwithTFJS
 
-# 12. Conversion to TFLite
+# # 12. Conversion to TFLite
 
-TFLITE_SCRIPT = os.path.join(paths['APIMODEL_PATH'], 'research', 'object_detection', 'export_tflite_graph_tf2.py ')
+# TFLITE_SCRIPT = os.path.join(paths['APIMODEL_PATH'], 'research', 'object_detection', 'export_tflite_graph_tf2.py ')
 
-command = "python {} --pipeline_config_path={} --trained_checkpoint_dir={} --output_directory={}".format(TFLITE_SCRIPT ,files['PIPELINE_CONFIG'], paths['CHECKPOINT_PATH'], paths['TFLITE_PATH'])
-os.system(command)
-#print(command)
-'''
-!{command}
-'''
+# command = "python {} --pipeline_config_path={} --trained_checkpoint_dir={} --output_directory={}".format(TFLITE_SCRIPT ,files['PIPELINE_CONFIG'], paths['CHECKPOINT_PATH'], paths['TFLITE_PATH'])
+# os.system(command)
+# #print(command)
+# '''
+# !{command}
+# '''
 
-FROZEN_TFLITE_PATH = os.path.join(paths['TFLITE_PATH'], 'saved_model')
-TFLITE_MODEL = os.path.join(paths['TFLITE_PATH'], 'saved_model', 'detect.tflite')
+# FROZEN_TFLITE_PATH = os.path.join(paths['TFLITE_PATH'], 'saved_model')
+# TFLITE_MODEL = os.path.join(paths['TFLITE_PATH'], 'saved_model', 'detect.tflite')
 
-command = "tflite_convert \
---saved_model_dir={} \
---output_file={} \
---input_shapes=1,300,300,3 \
---input_arrays=normalized_input_image_tensor \
---output_arrays='TFLite_Detection_PostProcess','TFLite_Detection_PostProcess:1','TFLite_Detection_PostProcess:2','TFLite_Detection_PostProcess:3' \
---inference_type=FLOAT \
---allow_custom_ops".format(FROZEN_TFLITE_PATH, TFLITE_MODEL, )
+# command = "tflite_convert \
+# --saved_model_dir={} \
+# --output_file={} \
+# --input_shapes=1,300,300,3 \
+# --input_arrays=normalized_input_image_tensor \
+# --output_arrays='TFLite_Detection_PostProcess','TFLite_Detection_PostProcess:1','TFLite_Detection_PostProcess:2','TFLite_Detection_PostProcess:3' \
+# --inference_type=FLOAT \
+# --allow_custom_ops".format(FROZEN_TFLITE_PATH, TFLITE_MODEL, )
 
-os.system(command)
+# os.system(command)
 
-#print(command)
-'''
-!{command}
-'''
-# 13. Zip and Export Models 
+# #print(command)
+# '''
+# !{command}
+# '''
+# # 13. Zip and Export Models 
 
-os.system('tar -czf models.tar.gz {paths[\'CHECKPOINT_PATH\']}')
-'''
-from google.colab import drive
-drive.mount('/content/drive')
-'''
+# os.system('tar -czf models.tar.gz {paths[\'CHECKPOINT_PATH\']}')
+# '''
+# from google.colab import drive
+# drive.mount('/content/drive')
+# '''
