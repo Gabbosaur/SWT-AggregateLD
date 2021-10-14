@@ -232,7 +232,7 @@ import numpy as np
 import tkinter
 from matplotlib import pyplot as plt
 import matplotlib
-matplotlib.use("TkAgg")
+matplotlib.use("TkAgg", force=True)
 #%matplotlib inline
 #plt.show()
 '''
@@ -319,85 +319,89 @@ for i in range(len(boxes)):
 cv2.imshow("Image",img)
 cv2.waitKey(0)
 '''
-#######################################YOLO V5
-isPerson=False
 
 import yolov5
 import torch
 
-IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
-
 # YOLOV5_model=os.path.join('tfod', 'Lib','site-packages', 'yolov5' ,'models', 'yolov5s.yaml'),
-print(os.getcwd())
+# print(os.getcwd()) # returns the currently working directory of a process
 # model = yolov5.load(YOLOV5_model) # carico modello tramite formato yaml, però non funziona
 # model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True) # scarico il modello
 model = yolov5.load('yolov5s.pt') # se ho il modello in locale
 
-img = cv2.imread(IMAGE_PATH)
+def rilevaPersona(model, frame):
+	#######################################YOLO V5
 
-
-# inference
-#results = model(img)
-
-results = model(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), size=400)
-
-labels, cord_thres = results.xyxyn[0][:, -1].numpy(), results.xyxyn[0][:, :-1].numpy() # estraggo labels e coordinate dei rettangoli
-classes = model.names
-# show results
-for i in labels:
-	print(classes[int(i)])
-	if(classes[int(i)]=="person"):
-		isPerson=True
-
-# show results
-results.print()
-results.show()
+	isPerson=False
+	## Immagine per test rilevazione persona
+	# IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'livelong.fed895dc-b264-11eb-bccc-086266b476b9.jpg')
 
 
 
-if(isPerson==True):
-	print("PERSONA RICONOSCIUTA")
-	category_index = label_map_util.create_category_index_from_labelmap(files['LABELMAP'])
-	#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
-	#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'prova_scritte.jpg')
+	# img = cv2.imread(frame)
 
-	img = cv2.imread(IMAGE_PATH)
-	image_np = np.array(img)
 
-	input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
-	detections = detect_fn(input_tensor)
+	# inference
+	#results = model(img)
 
-	num_detections = int(detections.pop('num_detections'))
-	detections = {key: value[0, :num_detections].numpy()
-				for key, value in detections.items()}
-	detections['num_detections'] = num_detections
+	results = model(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), size=400)
 
-	# detection_classes should be ints.
-	detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
+	labels, cord_thres = results.xyxyn[0][:, -1].numpy(), results.xyxyn[0][:, :-1].numpy() # estraggo labels e coordinate dei rettangoli
+	classes = model.names
+	# show results
+	for i in labels:
+		# print(classes[int(i)])
+		if(classes[int(i)]=="person"):
+			isPerson=True
 
-	label_id_offset = 1
-	image_np_with_detections = image_np.copy()
-
-	viz_utils.visualize_boxes_and_labels_on_image_array(
-				image_np_with_detections,
-				detections['detection_boxes'],
-				detections['detection_classes']+label_id_offset,
-				detections['detection_scores'],
-				category_index,
-				use_normalized_coordinates=True,
-				max_boxes_to_draw=5,
-				min_score_thresh=.8,
-				agnostic_mode=False)
-
-	plt.imshow(cv2.cvtColor(image_np_with_detections, cv2.COLOR_BGR2RGB))
-	plt.savefig("img_with_person.png")
-	plt.show()
-
-else:
-	print("PERSONA NON RICONOSCIUTA")
+	# show results
+	# results.print()
+	# results.show()
 
 
 
+	if(isPerson==True):
+		print("PERSONA RICONOSCIUTA")
+		category_index = label_map_util.create_category_index_from_labelmap(files['LABELMAP'])
+		#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
+		#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'prova_scritte.jpg')
+
+		# img = cv2.imread(frame)
+		image_np = np.array(frame)
+
+		input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
+		detections = detect_fn(input_tensor)
+
+		num_detections = int(detections.pop('num_detections'))
+		detections = {key: value[0, :num_detections].numpy()
+					for key, value in detections.items()}
+		detections['num_detections'] = num_detections
+
+		# detection_classes should be ints.
+		detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
+
+		label_id_offset = 1
+		image_np_with_detections = image_np.copy()
+
+		viz_utils.visualize_boxes_and_labels_on_image_array(
+					image_np_with_detections,
+					detections['detection_boxes'],
+					detections['detection_classes']+label_id_offset,
+					detections['detection_scores'],
+					category_index,
+					use_normalized_coordinates=True,
+					max_boxes_to_draw=5,
+					min_score_thresh=.8,
+					agnostic_mode=False)
+
+		# plt.imshow(cv2.cvtColor(image_np_with_detections, cv2.COLOR_BGR2RGB))
+		# plt.savefig("img_with_person.png")
+		# plt.show()
+	else:
+		print("PERSONA NON RICONOSCIUTA")
+
+
+	return isPerson
 
 
 
@@ -413,6 +417,13 @@ class Record:
 	num_frame: int
 	time: float
 	list_words: list
+	isPersonDetected: bool
+	# isSpeaker: bool
+	# faces: list
+	# idFaces: list
+
+# id face, id che assegneremo al momento del compare
+
 
 listOfRecords=[]
 video = cv2.VideoCapture('prova.mp4')
@@ -429,25 +440,35 @@ while video.isOpened():
 	ret, frame = video.read()
 	if not ret:
 		break
-	if i > frame_skip - 1:
+	if i > frame_skip - 1: # In questo caso ogni 5 secondi
+
 		#cv2.imwrite('test_'+str(i)+'.jpg', frame)
 		#print(pytesseract.image_to_string(frame))
 		temp_list_words=[]
 		boxes=pytesseract.image_to_data(frame)
 		frame_counter+=frame_skip
 		#print("frame number: " + str(frame_counter))
+
+		# Riconoscimento persona
+		isPersonDetected = rilevaPersona(model, frame)
+
+
+
+
 		for x,b in enumerate(boxes.splitlines()):
 			if x!=0:
 				b=b.split()
-				if len(b)==12:
+				if len(b)==12: # gli indici prima del 12 sono altre informazioni del testo (colore, posizione, etc..)
 					#print(b[11])
 					#lista delle parole
 					temp_list_words.append(b[11])
 		#struct con numero del frame e la lista di parole
-		rec=Record(frame_counter,frame_counter*temp,temp_list_words)
+		rec=Record(frame_counter,frame_counter*temp,temp_list_words, isPersonDetected)
 		#controlliamo se questo identico record è già contenuto nella lista
 		#potrebbe essere dispendioso, facciamo solo il compare con l'ultimo frame in listOfRecords?
 		flag=False
+
+		# conta se ci sono frames con la lista delle parole uguali
 		for y in listOfRecords:
 			if(y.list_words == rec.list_words):
 				flag=True
@@ -455,7 +476,7 @@ while video.isOpened():
 				break
 
 		if(flag==False):
-			listOfRecords.append(rec)
+			listOfRecords.append(rec) # avremo listOfRecords UNIVOCI
 		i = 0
 		continue
 	i += 1
@@ -470,7 +491,8 @@ for y in listOfRecords:
 	seconds = int(duration%60)
 	print('duration (M:S) = ' + str(minutes) + ':' + str(seconds))
 	print(y.list_words)
-
+	print("Persona presente? " + str(y.isPersonDetected))
+	print("\n")
 #print("frame doppi:"+ str(count_frame_doppi))
 #print(listOfRecords[0])
 
