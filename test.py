@@ -6,7 +6,7 @@ model = yolov5.load(fileName) # se ho il modello in locale
 
 # non funziona bene, rileva lavagne in ogni immagine. Il problema può essere la scarsità e qualità del dataset.
 def rilevaLavagna(model, frame):
-	model.conf = 0.4
+	model.conf = 0.6
 
 	isLavagna = False
 
@@ -29,5 +29,5 @@ def rilevaLavagna(model, frame):
 	print(isLavagna)
 
 
-frame = cv2.imread("lec6.jpg")
+frame = cv2.imread("cas5.jpg")
 rilevaLavagna(model, frame)
