@@ -9,7 +9,10 @@ mp_face_detection = mp.solutions.face_detection
 mp_drawing = mp.solutions.drawing_utils
 
 # For static images:
-IMAGE_FILES = ['zeropadding.jpg']
+
+IMAGE_FILES = ['lec2.jpg', 'cas11.jpg']
+IMAGE_FACES_PATH = 'images/faces/'
+FINAL_IMAGE_FILES = ['images/' + s for s in IMAGE_FILES]
 
 width = 0
 height = 0
@@ -17,8 +20,9 @@ padding = 50
 
 with mp_face_detection.FaceDetection(
 	model_selection=1, min_detection_confidence=0.5) as face_detection:
-	for idx, file in enumerate(IMAGE_FILES):
+	for idx, file in enumerate(FINAL_IMAGE_FILES):
 		image = cv2.imread(file)
+		print('IDX: ', idx)
 		print('width: ', image.shape[1])
 		print('height:', image.shape[0])
 		width = image.shape[1]
@@ -33,7 +37,12 @@ with mp_face_detection.FaceDetection(
 			continue
 
 		annotated_image = image.copy()
-		for detection in results.detections:
+
+
+		for i in range(len(results.detections)):
+			detection = results.detections[i]
+			print("DETECTION")
+			print(detection)
 			print("Faccia rilevata.")
 			# print(detection.location_data.relative_bounding_box)
 			xmin = int(detection.location_data.relative_bounding_box.xmin*width)
@@ -71,18 +80,22 @@ with mp_face_detection.FaceDetection(
 			# print('Nose tip:')
 			# print(mp_face_detection.get_key_point(detection, mp_face_detection.FaceKeyPoint.NOSE_TIP))
 			cropped_image = image[ymin:h, xmin:w]
-			cv2.imwrite('face_of_' + str(file[:-4]) + '_face' + str(idx) + '.jpg', cropped_image)
+			cv2.imwrite(IMAGE_FACES_PATH + 'face_of_' + str(file[7:-4]) + '_face' + str(i) + '.jpg', cropped_image)
 
-
+			mp_drawing.draw_detection(annotated_image, detection)
 			cv2.waitKey(0)
 			cv2.destroyAllWindows()
 
-
-			mp_drawing.draw_detection(annotated_image, detection)
+		# # Produce un'immagine con i punti della faccia trovata
 		cv2.imwrite('annotated_image' + str(idx) + '.png', annotated_image)
+		print('\n')
 
 
+
+# # Analizza l'immagine ed inferisce l'emozione, gli anni, il sesso e la nazionalità
 # obj = DeepFace.analyze(img_path = "lec2.jpg")
 # print(obj)
-# result = DeepFace.verify(img1_path = "lec3.jpg", img2_path = "face_of_lec2_face0.jpg")
+
+# Compara le due foto e definisce se le due persone trovate sono la stessa persona
+# result = DeepFace.verify(img1_path = "images/lec3.jpg", img2_path = IMAGE_FACES_PATH+"face_of_lec2_face0.jpg")
 # print(result)
