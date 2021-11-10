@@ -97,5 +97,5 @@ with mp_face_detection.FaceDetection(
 # print(obj)
 
 # Compara le due foto e definisce se le due persone trovate sono la stessa persona
-# result = DeepFace.verify(img1_path = "images/lec3.jpg", img2_path = IMAGE_FACES_PATH+"face_of_lec2_face0.jpg")
-# print(result)
+result = DeepFace.verify(img1_path = "images/lec3.jpg", img2_path = IMAGE_FACES_PATH+"face_of_lec2_face0.jpg")
+print(result)

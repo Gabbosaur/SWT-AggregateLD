@@ -241,9 +241,9 @@ class Record: # 1 frame
 	time: float
 	list_words: list
 	isPersonDetected: bool
-	# isSpeaker: bool
-	# path_faces: list 			# ['faccia1', 'faccia2', 'faccia3']
-	# idFaces: list 			# [0,1,2] in questo caso ci sono 3 persone distinte e alla fine contare le occorrenze e scegliere il massimo, se il numero delle occorrenze fossero uguali, si prende quello con l'id più basso
+	isSpeaker: bool
+	# path_faces: list 		# ['faccia1', 'faccia2', 'faccia3']
+	idFaces: list 			# [0,1,2] in questo caso ci sono 3 persone distinte e alla fine contare le occorrenze e scegliere il massimo, se il numero delle occorrenze fossero uguali, si prende quello con l'id più basso
 
 # id face, id che assegneremo al momento del compare
 
@@ -251,6 +251,7 @@ class Record: # 1 frame
 class FrameWithFaces:
 	num_frame: int
 	num_faces: int
+	isProcessed: list
 
 
 listOfRecords=[]
@@ -304,7 +305,11 @@ while video.isOpened():
 				# annotated_image = image.copy()
 
 				# Popola la lista con un frame con tot facce, quando faremo il compare delle facce, useremo questa lista per ottimizzare i tempi
-				frame_with_faces.append(FrameWithFaces(n_frame_analyzed, len(results.detections)))
+				list_boolean = []
+				for i in len(results.detections):
+					list_boolean.append(False)
+				frame_with_faces.append(FrameWithFaces(n_frame_analyzed, len(results.detections), list_boolean))
+
 
 				for i in range(len(results.detections)):
 					detection = results.detections[i]
@@ -361,8 +366,15 @@ while video.isOpened():
 					#print(b[11])
 					#lista delle parole
 					temp_list_words.append(b[11])
+
+
+		lunghezza_isProcessed = len(frame_with_faces[len(frame_with_faces)-1].isProcessed)
+		list_idFaces = []
+		for i in range(lunghezza_isProcessed):
+			list_idFaces.append(-1)
+
 		#struct con numero del frame e la lista di parole
-		rec=Record(frame_counter,frame_counter*temp,temp_list_words, isPersonDetected)
+		rec=Record(frame_counter,frame_counter*temp,temp_list_words, isPersonDetected, False, list_idFaces)
 		#controlliamo se questo identico record è già contenuto nella lista
 		#potrebbe essere dispendioso, facciamo solo il compare con l'ultimo frame in listOfRecords?
 		flag=False
@@ -391,7 +403,46 @@ cv2.destroyAllWindows()
 # print(result)
 print(frame_with_faces)
 
+from os import listdir
+from os.path import isfile, join
 
+mypath = 'images/faces/'
+onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+print(onlyfiles)
+
+
+FILENAME = os.path.splitext(NOME_VIDEO)[0]
+idFace = -1
+
+for i in range(len(frame_with_faces)):
+	frame = frame_with_faces[i]
+	for n_face in frame.num_faces:
+		# La prima immagine di faccia
+		path_img = 'images/faces/faces_of_' + FILENAME + '_frame_' + str(frame.num_frame) + '_face_' + str(n_face) + '.jpg'
+
+		if frame_with_faces[i].isProcessed[n_face] == False: # assegnamo una faccia se non è stata processata
+			idFace+=1
+			frame_with_faces[i].isProcessed[n_face] = True
+			listOfRecords[frame.num_frame].idFaces[n_face] = idFace
+
+
+			for j in range(i+1, len(frame_with_faces)):
+				for k in range(frame_with_faces[j].num_faces): # numero di facce di quel frame specifico j
+
+					if frame_with_faces[j].isProcessed[k] == False:
+
+						# Compara le due foto e definisce se le due persone trovate sono la stessa persona
+						path_img2 = 'images/faces/faces_of_' + FILENAME + '_frame_' + str(frame_with_faces[j].num_frame) + '_face_' + str(k) + '.jpg'
+						result = DeepFace.verify(img1_path = path_img, img2_path = path_img2)
+						print(result)
+
+						if results.verified == True:
+							frame_with_faces[j].isProcessed[k] = True
+							listOfRecords[j].idFaces[k] = idFace # metto lo stesso idFace della stessa faccia trovata
+
+
+					else:
+						continue
 
 #print(listOfRecords)
 for y in listOfRecords:
