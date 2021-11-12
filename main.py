@@ -266,6 +266,7 @@ frame_counter=0
 temp=1/fps
 n_frame_analyzed = 0
 frame_with_faces = []
+lunghezza_isProcessed = 1
 
 count_frame_doppi=0
 
@@ -306,9 +307,12 @@ while video.isOpened():
 
 				# Popola la lista con un frame con tot facce, quando faremo il compare delle facce, useremo questa lista per ottimizzare i tempi
 				list_boolean = []
-				for i in len(results.detections):
+				for i in range(len(results.detections)):
 					list_boolean.append(False)
 				frame_with_faces.append(FrameWithFaces(n_frame_analyzed, len(results.detections), list_boolean))
+
+
+				lunghezza_isProcessed = len(frame_with_faces[len(frame_with_faces)-1].isProcessed)
 
 
 				for i in range(len(results.detections)):
@@ -358,7 +362,7 @@ while video.isOpened():
 
 
 
-
+		# Lista delle parole con OCR
 		for x,b in enumerate(boxes.splitlines()):
 			if x!=0:
 				b=b.split()
@@ -367,12 +371,16 @@ while video.isOpened():
 					#lista delle parole
 					temp_list_words.append(b[11])
 
-
-		lunghezza_isProcessed = len(frame_with_faces[len(frame_with_faces)-1].isProcessed)
+		# Inizializzo la lista delle facce per le facce univoche trovate con isProcessed
 		list_idFaces = []
 		for i in range(lunghezza_isProcessed):
 			list_idFaces.append(-1)
 
+		lunghezza_isProcessed = 1 # se non ci sono facce, la lista idFaces è -1 (anziché vuota)
+
+
+		print("-------------- isPersonDetected che diamo al RECORD ----------------")
+		print(isPersonDetected)
 		#struct con numero del frame e la lista di parole
 		rec=Record(frame_counter,frame_counter*temp,temp_list_words, isPersonDetected, False, list_idFaces)
 		#controlliamo se questo identico record è già contenuto nella lista
@@ -386,8 +394,19 @@ while video.isOpened():
 				count_frame_doppi += 1
 				break
 
-		if(flag==False):
-			listOfRecords.append(rec) # avremo listOfRecords UNIVOCI
+		# listOfRecords.append(rec) # Inserisco ogni Record anche se doppione
+
+
+		if rec.isPersonDetected == True: #se c'è una persona
+			listOfRecords.append(rec)
+		else: # se NON c'è una persona
+			if flag == False: # ma le parole sono diverse
+				listOfRecords.append(rec)
+
+
+		# # SCOMMENTARE PER AVERE I RECORD UNIVOCI IN BASE ALLE PAROLE
+		# if(flag==False):
+		# 	listOfRecords.append(rec) # avremo listOfRecords UNIVOCI
 		i = 0
 		continue
 	i += 1
@@ -414,11 +433,12 @@ print(onlyfiles)
 FILENAME = os.path.splitext(NOME_VIDEO)[0]
 idFace = -1
 
+# Loop che compara le facce trovate e conta il numero di occorrenze della relativa faccia
 for i in range(len(frame_with_faces)):
 	frame = frame_with_faces[i]
-	for n_face in frame.num_faces:
+	for n_face in range(frame.num_faces):
 		# La prima immagine di faccia
-		path_img = 'images/faces/faces_of_' + FILENAME + '_frame_' + str(frame.num_frame) + '_face_' + str(n_face) + '.jpg'
+		path_img = 'images/faces/face_of_' + FILENAME + '_frame_' + str(frame.num_frame) + '_face_' + str(n_face) + '.jpg'
 
 		if frame_with_faces[i].isProcessed[n_face] == False: # assegnamo una faccia se non è stata processata
 			idFace+=1
@@ -432,27 +452,35 @@ for i in range(len(frame_with_faces)):
 					if frame_with_faces[j].isProcessed[k] == False:
 
 						# Compara le due foto e definisce se le due persone trovate sono la stessa persona
-						path_img2 = 'images/faces/faces_of_' + FILENAME + '_frame_' + str(frame_with_faces[j].num_frame) + '_face_' + str(k) + '.jpg'
-						result = DeepFace.verify(img1_path = path_img, img2_path = path_img2)
-						print(result)
+						path_img2 = 'images/faces/face_of_' + FILENAME + '_frame_' + str(frame_with_faces[j].num_frame) + '_face_' + str(k) + '.jpg'
+						df_result = DeepFace.verify(img1_path = path_img, img2_path = path_img2)
+						print(df_result)
 
-						if results.verified == True:
+						if df_result['verified'] == True:
 							frame_with_faces[j].isProcessed[k] = True
 							listOfRecords[j].idFaces[k] = idFace # metto lo stesso idFace della stessa faccia trovata
 
 
 					else:
+						print("Gia' processata.")
 						continue
 
-#print(listOfRecords)
+
+print("-------------- List of Records --------------")
+
+print(listOfRecords)
+
+print("-------------- Frame with faces ---------------")
+print(frame_with_faces)
+
 for y in listOfRecords:
 	duration=y.time
 	minutes = int(duration/60)
 	seconds = int(duration%60)
-	print('duration (M:S) = ' + str(minutes) + ':' + str(seconds))
-	print(y.list_words)
-	print("Persona presente? " + str(y.isPersonDetected))
-	print("\n")
+	# print('duration (M:S) = ' + str(minutes) + ':' + str(seconds))
+	# print(y.list_words)
+	# print("Persona presente? " + str(y.isPersonDetected))
+	# print("\n")
 #print("frame doppi:"+ str(count_frame_doppi))
 #print(listOfRecords[0])
 
