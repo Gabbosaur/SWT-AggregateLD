@@ -252,6 +252,7 @@ class FrameWithFaces:
 	num_frame: int
 	num_faces: int
 	isProcessed: list
+	time: float
 
 
 listOfRecords=[]
@@ -309,7 +310,7 @@ while video.isOpened():
 				list_boolean = []
 				for i in range(len(results.detections)):
 					list_boolean.append(False)
-				frame_with_faces.append(FrameWithFaces(n_frame_analyzed, len(results.detections), list_boolean))
+				frame_with_faces.append(FrameWithFaces(n_frame_analyzed, len(results.detections), list_boolean,frame_counter*temp))
 
 
 				lunghezza_isProcessed = len(frame_with_faces[len(frame_with_faces)-1].isProcessed)
@@ -443,7 +444,10 @@ for i in range(len(frame_with_faces)):
 		if frame_with_faces[i].isProcessed[n_face] == False: # assegnamo una faccia se non è stata processata
 			idFace+=1
 			frame_with_faces[i].isProcessed[n_face] = True
-			listOfRecords[frame.num_frame].idFaces[n_face] = idFace
+			for k in range(i,len(listOfRecords)):
+				if(listOfRecords[k].time == frame_with_faces[i].time):
+					listOfRecords[k].idFaces[n_face] = idFace
+					break
 
 
 			for j in range(i+1, len(frame_with_faces)):
@@ -458,7 +462,10 @@ for i in range(len(frame_with_faces)):
 
 						if df_result['verified'] == True:
 							frame_with_faces[j].isProcessed[k] = True
-							listOfRecords[j].idFaces[k] = idFace # metto lo stesso idFace della stessa faccia trovata
+							for f in range(j,len(listOfRecords)):
+								if(listOfRecords[f].time == frame_with_faces[j].time):
+									listOfRecords[f].idFaces[k] = idFace # metto lo stesso idFace della stessa faccia trovata
+									break
 
 
 					else:
