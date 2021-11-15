@@ -433,6 +433,7 @@ print(onlyfiles)
 
 FILENAME = os.path.splitext(NOME_VIDEO)[0]
 idFace = -1
+totalFace=[]
 
 # Loop che compara le facce trovate e conta il numero di occorrenze della relativa faccia
 for i in range(len(frame_with_faces)):
@@ -443,6 +444,7 @@ for i in range(len(frame_with_faces)):
 
 		if frame_with_faces[i].isProcessed[n_face] == False: # assegnamo una faccia se non è stata processata
 			idFace+=1
+			totalFace.append(1)
 			frame_with_faces[i].isProcessed[n_face] = True
 			for k in range(i,len(listOfRecords)):
 				if(listOfRecords[k].time == frame_with_faces[i].time):
@@ -461,6 +463,7 @@ for i in range(len(frame_with_faces)):
 						print(df_result)
 
 						if df_result['verified'] == True:
+							totalFace[idFace]+=1
 							frame_with_faces[j].isProcessed[k] = True
 							for f in range(j,len(listOfRecords)):
 								if(listOfRecords[f].time == frame_with_faces[j].time):
@@ -473,12 +476,35 @@ for i in range(len(frame_with_faces)):
 						continue
 
 
+
+idSpeaker=totalFace.index(max(totalFace))
+maxSpeakerApparence=max(totalFace)
+
+counter=0
+for i in range(len(listOfRecords)):
+	for j in range(len(listOfRecords[i].idFaces)):
+		if listOfRecords[i].idFaces[j]==idSpeaker:
+			listOfRecords[i].isSpeaker=True
+			counter+=1
+			break
+	if counter==maxSpeakerApparence:
+		break
+
+
+print("la faccia con più apparizioni è quella con id: "+str(idSpeaker)+" ed ha avuto "+str(maxSpeakerApparence)+" apparizioni")
+
+
 print("-------------- List of Records --------------")
 
 print(listOfRecords)
 
 print("-------------- Frame with faces ---------------")
 print(frame_with_faces)
+
+print("-------------- totalFace ---------------")
+print(totalFace)
+
+print(counter)
 
 for y in listOfRecords:
 	duration=y.time
