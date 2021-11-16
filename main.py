@@ -257,7 +257,7 @@ class FrameWithFaces:
 
 listOfRecords=[]
 IMAGE_FACES_PATH = 'images/faces/'
-NOME_VIDEO = 'prova.mp4'
+NOME_VIDEO = 'prova2persone.mp4'
 video = cv2.VideoCapture(NOME_VIDEO)
 i = 0
 # a variable to set how many frames you want to skip
@@ -380,7 +380,7 @@ while video.isOpened():
 		lunghezza_isProcessed = 1 # se non ci sono facce, la lista idFaces è -1 (anziché vuota)
 
 
-		print("-------------- isPersonDetected che diamo al RECORD ----------------")
+	
 		print(isPersonDetected)
 		#struct con numero del frame e la lista di parole
 		rec=Record(frame_counter,frame_counter*temp,temp_list_words, isPersonDetected, False, list_idFaces)
@@ -443,42 +443,50 @@ for i in range(len(frame_with_faces)):
 		path_img = 'images/faces/face_of_' + FILENAME + '_frame_' + str(frame.num_frame) + '_face_' + str(n_face) + '.jpg'
 
 		if frame_with_faces[i].isProcessed[n_face] == False: # assegnamo una faccia se non è stata processata
-			idFace+=1
-			totalFace.append(1)
-			frame_with_faces[i].isProcessed[n_face] = True
-			for k in range(i,len(listOfRecords)):
-				if(listOfRecords[k].time == frame_with_faces[i].time):
-					listOfRecords[k].idFaces[n_face] = idFace
-					break
+
+			try:
+				obj = DeepFace.verify(img1_path=path_img, img2_path=path_img) # se trova una faccia continua, se no exception
+				idFace+=1
+				totalFace.append(1)
+				frame_with_faces[i].isProcessed[n_face] = True
+				for k in range(i,len(listOfRecords)):
+					if(listOfRecords[k].time == frame_with_faces[i].time):
+						listOfRecords[k].idFaces[n_face] = idFace
+						break
 
 
-			for j in range(i+1, len(frame_with_faces)):
-				for k in range(frame_with_faces[j].num_faces): # numero di facce di quel frame specifico j
+				for j in range(i+1, len(frame_with_faces)):
+					for k in range(frame_with_faces[j].num_faces): # numero di facce di quel frame specifico j
 
-					if frame_with_faces[j].isProcessed[k] == False:
+						if frame_with_faces[j].isProcessed[k] == False:
 
-						# Compara le due foto e definisce se le due persone trovate sono la stessa persona
-						path_img2 = 'images/faces/face_of_' + FILENAME + '_frame_' + str(frame_with_faces[j].num_frame) + '_face_' + str(k) + '.jpg'
-						df_result = DeepFace.verify(img1_path = path_img, img2_path = path_img2)
-						print(df_result)
+							# Compara le due foto e definisce se le due persone trovate sono la stessa persona
+							path_img2 = 'images/faces/face_of_' + FILENAME + '_frame_' + str(frame_with_faces[j].num_frame) + '_face_' + str(k) + '.jpg'
+							try:
+								df_result = DeepFace.verify(img1_path = path_img, img2_path = path_img2)
+								print(df_result)
 
-						if df_result['verified'] == True:
-							totalFace[idFace]+=1
-							frame_with_faces[j].isProcessed[k] = True
-							for f in range(j,len(listOfRecords)):
-								if(listOfRecords[f].time == frame_with_faces[j].time):
-									listOfRecords[f].idFaces[k] = idFace # metto lo stesso idFace della stessa faccia trovata
-									break
+								if df_result['verified'] == True:
+									totalFace[idFace]+=1
+									frame_with_faces[j].isProcessed[k] = True
+									for f in range(j,len(listOfRecords)):
+										if(listOfRecords[f].time == frame_with_faces[j].time):
+											listOfRecords[f].idFaces[k] = idFace # metto lo stesso idFace della stessa faccia trovata
+											break
+							except:
+								print("DeepFace: Face could not be detected.")
 
+						else:
+							print("Gia' processata.")
+							continue
 
-					else:
-						print("Gia' processata.")
-						continue
+			except:
+				print("EXCEPTION: Faccia non trovata")
 
 
 
 idSpeaker=totalFace.index(max(totalFace))
-maxSpeakerApparence=max(totalFace)
+maxSpeakerApparence=max(totalFace) # numero delle apparizioni dello speaker
 
 counter=0
 for i in range(len(listOfRecords)):
@@ -491,7 +499,7 @@ for i in range(len(listOfRecords)):
 		break
 
 
-print("la faccia con più apparizioni è quella con id: "+str(idSpeaker)+" ed ha avuto "+str(maxSpeakerApparence)+" apparizioni")
+print("la faccia con più apparizioni è quella con id: "+str(idSpeaker)+" ed ha avuto "+str(maxSpeakerApparence)+" apparizioni con una percentuale di " + str(maxSpeakerApparence/n_frame_analyzed*100) + "%")
 
 
 print("-------------- List of Records --------------")
@@ -506,6 +514,8 @@ print(totalFace)
 
 print(counter)
 
+
+
 for y in listOfRecords:
 	duration=y.time
 	minutes = int(duration/60)
@@ -518,3 +528,14 @@ for y in listOfRecords:
 #print(listOfRecords[0])
 
 
+# DELETE FACE IMAGES
+import os, shutil
+for filename in os.listdir(IMAGE_FACES_PATH):
+    file_path = os.path.join(IMAGE_FACES_PATH, filename)
+    try:
+        if os.path.isfile(file_path) or os.path.islink(file_path):
+            os.unlink(file_path)
+        elif os.path.isdir(file_path):
+            shutil.rmtree(file_path)
+    except Exception as e:
+        print('Failed to delete %s. Reason: %s' % (file_path, e))
