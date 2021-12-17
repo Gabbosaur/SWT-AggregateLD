@@ -29,5 +29,5 @@ def rilevaLavagna(model, frame):
 	print(isLavagna)
 
 
-frame = cv2.imread("cas5.jpg")
+frame = cv2.imread("images/test/lec6.jpg")
 rilevaLavagna(model, frame)
