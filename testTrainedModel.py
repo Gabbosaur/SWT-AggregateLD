@@ -15,6 +15,7 @@ y_pred_proba = model.predict_proba(image_feature)
 
 print("Probabilità: ", y_pred_proba)
 print("Varianza: ", np.var(y_pred_proba))
+calculateFeatureAndTrain_module.print_model_score(model)
 
 if y_pred == 0:
 	print("Blackboard")

@@ -9,6 +9,7 @@ import pandas as pd
 import sklearn.metrics as metrics
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import cross_val_score
 
 mp_face_detection = mp.solutions.face_detection
 mp_drawing = mp.solutions.drawing_utils
@@ -85,8 +86,6 @@ def featureExtraction(IMAGE_TRAIN_PATH):
 		#if cartella=="noAlzateLaterali":
 			#directory=FULL_VIDEO_PATH
 		print("sto processando le img in: "+ directory )
-		print("---------------------")
-		print(os.listdir(directory))
 		for file in os.listdir(directory):
 			path_directory = os.path.join(FINAL_IMAGE_TRAIN_PATH, directory)
 			filename = os.fsdecode(file)
@@ -236,6 +235,10 @@ def singleImageFeatureExtraction(final_file_path):
 
 	return features
 
+def print_model_score(model):
+	X_train, y_train = featureExtraction(IMAGE_TRAIN_PATH)
+	cross_score = cross_val_score(model, X_train, y_train, cv=5)
+	print("Model's score: %f accuracy with a standard deviation of %f" % (cross_score.mean(), cross_score.std()))
 
 def train():
 	X_train, y_train = featureExtraction(IMAGE_TRAIN_PATH)
