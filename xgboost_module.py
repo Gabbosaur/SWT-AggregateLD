@@ -62,7 +62,7 @@ def train(X_train,y_train,best_params):
 	cross_score = cross_val_score(model, X_train, y_train, cv=5) # training accuracy
 	print("best: %f accuracy with a standard deviation of %f" % (cross_score.mean(), cross_score.std()))
 	# save the model to disk
-	filename = 'xgboost.sav'
+	filename = 'xgboost500.sav'
 	pickle.dump(model, open(filename, 'wb'))
 
 	return model
@@ -82,7 +82,7 @@ def findBestHyperparameters(X_train, y_train):
 			reg_lambda=trial.suggest_float("reg_lambda", 1e-4, 1e2, log=True),
 			gamma=trial.suggest_float("gamma", 0, 50),
 		)
-		DTC = XGBClassifier(**dtc_params, use_label_encoder=False, eval_metric = 'mlogloss', random_state=0) # DTC con i range di parametri dati
+		DTC = XGBClassifier(**dtc_params, use_label_encoder=False, eval_metric = 'mlogloss', random_state=42) # DTC con i range di parametri dati
 		cross_score = cross_val_score(DTC, X_train, y_train, cv=5)
 		error = 1.0 - cross_score.mean()
 		return error
@@ -90,7 +90,7 @@ def findBestHyperparameters(X_train, y_train):
 
 	# 3. Create a study object and optimize the objective function.
 	study = optuna.create_study() # di default è minimize, quindi di minimizzare l'errore
-	study.optimize(objective, n_trials=150)
+	study.optimize(objective, n_trials=500)
 
 	print(study.best_params) # Printa i migliori parametri
 	print(1.0 - study.best_value) # Printa l'accuracy

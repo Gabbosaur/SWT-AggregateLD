@@ -264,10 +264,6 @@ def train():
 	study=xgboost_module.findBestHyperparameters(X_train, y_train)
 	model=xgboost_module.train(X_train, y_train, study.best_params)
 	y_pred = model.predict(X_test)
-	print("------ y_pred")
-	print(y_pred)
-
+	print_model_score(model)
 	print(confusion_matrix(y_true=y_test, y_pred=y_pred, labels=scenes))
-
-
 
