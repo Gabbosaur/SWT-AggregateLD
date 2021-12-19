@@ -8,11 +8,14 @@ from object_detection.builders import model_builder
 from object_detection.utils import config_util
 from matplotlib import pyplot as plt
 import matplotlib
+import pickle
+import calculateFeatureAndTrain_module
+
 matplotlib.use("TkAgg", force=True)
 #%matplotlib inline
 #plt.show()
 
-CUSTOM_MODEL_NAME = 'my_ssd_mobnet' 
+CUSTOM_MODEL_NAME = 'my_ssd_mobnet'
 PRETRAINED_MODEL_NAME = 'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8'
 PRETRAINED_MODEL_URL = 'http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8.tar.gz'
 TF_RECORD_SCRIPT_NAME = 'generate_tfrecord.py'
@@ -178,7 +181,7 @@ def rilevaPersona(model, frame):
 
 
 	if(isPerson==True):
-		print("PERSONA RICONOSCIUTA")
+		print("YOLOv5: PERSONA RICONOSCIUTA")
 		category_index = label_map_util.create_category_index_from_labelmap(files['LABELMAP'])
 		#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'thumbsdown.b1f20c56-b4d4-11eb-ae88-240a64b78789.jpg')
 		#IMAGE_PATH = os.path.join(paths['IMAGE_PATH'], 'test', 'prova_scritte.jpg')
@@ -215,7 +218,7 @@ def rilevaPersona(model, frame):
 		# plt.savefig("img_with_person.png")
 		# plt.show()
 	else:
-		print("PERSONA NON RICONOSCIUTA")
+		print("YOLOv5: PERSONA NON RICONOSCIUTA")
 
 
 	return isPerson
@@ -244,6 +247,7 @@ class Record: # 1 frame
 	isSpeaker: bool
 	# path_faces: list 		# ['faccia1', 'faccia2', 'faccia3']
 	idFaces: list 			# [0,1,2] in questo caso ci sono 3 persone distinte e alla fine contare le occorrenze e scegliere il massimo, se il numero delle occorrenze fossero uguali, si prende quello con l'id più basso
+	scene: any				# blackboard || slide || slide-and-talk || talk
 
 # id face, id che assegneremo al momento del compare
 
@@ -271,11 +275,21 @@ lunghezza_isProcessed = 1
 
 count_frame_doppi=0
 
+scenes = ["Blackboard", "Slide", "Slide-and-talk", "Talk"]
+
+# Carico il modello migliore per scene prediction
+scene_model = pickle.load(open("xgboost500.sav", 'rb'))
+
+
 while video.isOpened():
 	ret, frame = video.read()
 	if not ret:
 		break
 	if i > frame_skip - 1: # In questo caso ogni 5 secondi
+		duration = frame_counter*temp
+		minutes = int(duration/60)
+		seconds = int(duration%60)
+		print(" ------------ Frame at " + str(minutes) + " min and " + str(seconds) + " seconds ----------- ")
 		n_frame_analyzed+=1
 		#cv2.imwrite('test_'+str(i)+'.jpg', frame)
 		#print(pytesseract.image_to_string(frame))
@@ -284,15 +298,15 @@ while video.isOpened():
 		frame_counter+=frame_skip
 		#print("frame number: " + str(frame_counter))
 
-		# Riconoscimento persona
+		# Riconoscimento persona con YoloV5
 		isPersonDetected = rilevaPersona(model, frame)
 
 		if isPersonDetected == True:
 			with mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.5) as face_detection:
 
 				# image = cv2.imread(file)
-				print('width: ', frame.shape[1])
-				print('height:', frame.shape[0])
+				# print('width: ', frame.shape[1])
+				# print('height:', frame.shape[0])
 				width = frame.shape[1]
 				height = frame.shape[0]
 
@@ -301,7 +315,7 @@ while video.isOpened():
 
 				# Draw face detections of each face.
 				if not results.detections:
-					print("Nessuna faccia rilevata.")
+					print("Mediapipe: Nessuna faccia rilevata.")
 					continue
 
 				# annotated_image = image.copy()
@@ -318,7 +332,7 @@ while video.isOpened():
 
 				for i in range(len(results.detections)):
 					detection = results.detections[i]
-					print("Faccia rilevata.")
+					print("Mediapipe: Faccia rilevata.")
 					# print(detection.location_data.relative_bounding_box)
 					xmin = int(detection.location_data.relative_bounding_box.xmin*width)
 					ymin = int(detection.location_data.relative_bounding_box.ymin*height)
@@ -347,10 +361,10 @@ while video.isOpened():
 						h = height
 
 
-					print(xmin)
-					print(ymin)
-					print(w)
-					print(h)
+					# print(xmin)
+					# print(ymin)
+					# print(w)
+					# print(h)
 
 					# print('Nose tip:')
 					# print(mp_face_detection.get_key_point(detection, mp_face_detection.FaceKeyPoint.NOSE_TIP))
@@ -380,10 +394,25 @@ while video.isOpened():
 		lunghezza_isProcessed = 1 # se non ci sono facce, la lista idFaces è -1 (anziché vuota)
 
 
-	
-		print(isPersonDetected)
+
+		print("isPersonDetected: ", isPersonDetected)
+
+
+		# SCENE PREDICTION
+		image_feature = calculateFeatureAndTrain_module.singleImageFeatureExtraction(img=frame)
+		image_feature = np.array([image_feature])
+		# Predict the response for test dataset
+		y_pred = scene_model.predict(image_feature)
+		y_pred_proba = scene_model.predict_proba(image_feature)
+
+		print("Probabilità del tipo di scena:\t", y_pred_proba)
+		print("Varianza della probabilità:\t", np.var(y_pred_proba))
+		print("Scene:\t", scenes[int(y_pred)])
+
+		print("")
+
 		#struct con numero del frame e la lista di parole
-		rec=Record(frame_counter,frame_counter*temp,temp_list_words, isPersonDetected, False, list_idFaces)
+		rec=Record(frame_counter,frame_counter*temp,temp_list_words, isPersonDetected, False, list_idFaces, scenes[int(y_pred)])
 		#controlliamo se questo identico record è già contenuto nella lista
 		#potrebbe essere dispendioso, facciamo solo il compare con l'ultimo frame in listOfRecords?
 		flag=False

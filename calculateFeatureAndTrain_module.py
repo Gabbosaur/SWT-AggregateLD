@@ -167,10 +167,28 @@ def featureExtraction(IMAGE_TRAIN_PATH):
 
 	return X_train, y_train
 
-def singleImageFeatureExtraction(final_file_path):
+def singleImageFeatureExtraction(final_file_path = None, img = None):
 	numero_gruppi = 16
+	flagException = False
 
-	img = cv.imread(final_file_path,0)
+	try:
+		if (final_file_path == None) and (img == None):
+			flagException = True
+	except:
+		pass
+
+	try:
+		if ((final_file_path == None) and (img.all() == None)):
+			flagException = True
+	except:
+		pass
+
+	if flagException == True:
+		raise Exception("inserire un parametro alla funzione singleImageFeatureExtraction")
+
+	if final_file_path != None:
+		img = cv.imread(final_file_path,0)
+
 	hist = cv.calcHist([img],[0],None,[256],[0,256])
 
 	dimensione_gruppo = len(hist) / numero_gruppi
