@@ -276,6 +276,7 @@ lunghezza_isProcessed = 1
 count_frame_doppi=0
 
 scenes = ["Blackboard", "Slide", "Slide-and-talk", "Talk"]
+counter_scenes = [0,0,0,0] # blackboard, slide, slide-and-talk, talk
 
 # Carico il modello migliore per scene prediction
 scene_model = pickle.load(open("xgboost500.sav", 'rb'))
@@ -405,8 +406,15 @@ while video.isOpened():
 		y_pred = scene_model.predict(image_feature)
 		y_pred_proba = scene_model.predict_proba(image_feature)
 
+		counter_scenes[int(y_pred)] += 1
+
 		print("Probabilità del tipo di scena:\t", y_pred_proba)
-		print("Varianza della probabilità:\t", np.var(y_pred_proba))
+
+		sorted_y_pred_proba = y_pred_proba
+		sorted_y_pred_proba.sort()
+		differenza_prob = sorted_y_pred_proba[0][-1]-sorted_y_pred_proba[0][-2]
+		print("Differenza tra le due probabilità più grandi:\t{:.5f} ({:.2f}%)".format(differenza_prob, differenza_prob*100))
+		# print("Varianza della probabilità:\t", np.var(y_pred_proba))
 		print("Scene:\t", scenes[int(y_pred)])
 
 		print("")
@@ -450,14 +458,14 @@ cv2.destroyAllWindows()
 # Compara le due foto e definisce se le due persone trovate sono la stessa persona
 # result = DeepFace.verify(img1_path = "images/lec3.jpg", img2_path = IMAGE_FACES_PATH+"face_of_lec2_face0.jpg")
 # print(result)
-print(frame_with_faces)
+# print(frame_with_faces)
 
 from os import listdir
 from os.path import isfile, join
 
 mypath = 'images/faces/'
 onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-print(onlyfiles)
+# print(onlyfiles)
 
 
 FILENAME = os.path.splitext(NOME_VIDEO)[0]
@@ -493,7 +501,7 @@ for i in range(len(frame_with_faces)):
 							path_img2 = 'images/faces/face_of_' + FILENAME + '_frame_' + str(frame_with_faces[j].num_frame) + '_face_' + str(k) + '.jpg'
 							try:
 								df_result = DeepFace.verify(img1_path = path_img, img2_path = path_img2)
-								print(df_result)
+								# print(df_result)
 
 								if df_result['verified'] == True:
 									totalFace[idFace]+=1
@@ -503,14 +511,16 @@ for i in range(len(frame_with_faces)):
 											listOfRecords[f].idFaces[k] = idFace # metto lo stesso idFace della stessa faccia trovata
 											break
 							except:
-								print("DeepFace: Face could not be detected.")
+								# print("DeepFace: Face could not be detected.")
+								pass
 
 						else:
-							print("Gia' processata.")
+							# print("Gia' processata.")
 							continue
 
 			except:
-				print("EXCEPTION: Faccia non trovata")
+				# print("EXCEPTION: Faccia non trovata")
+				pass
 
 
 
@@ -527,21 +537,26 @@ for i in range(len(listOfRecords)):
 	if counter==maxSpeakerApparence:
 		break
 
+print(" - - - VIDEO SUMMARY - - - ")
+print("Le facce trovate sono: ", totalFace)
+print("La faccia con più apparizioni è quella con id: "+str(idSpeaker)+" ed ha avuto "+str(maxSpeakerApparence)+" apparizioni con una percentuale di " + str(round(maxSpeakerApparence/n_frame_analyzed*100, 2)) + "%")
 
-print("la faccia con più apparizioni è quella con id: "+str(idSpeaker)+" ed ha avuto "+str(maxSpeakerApparence)+" apparizioni con una percentuale di " + str(maxSpeakerApparence/n_frame_analyzed*100) + "%")
+print("Scene:")
+for i in range(len(counter_scenes)):
+	print(scenes[i] + ": " + str(counter_scenes[i]) + " frames (" + str(round((counter_scenes[i]/n_frame_analyzed)*100,2)) + "%)")
+
+# print("-------------- List of Records --------------")
+
+# print(listOfRecords)
+
+# print("-------------- Frame with faces ---------------")
+# print(frame_with_faces)
+
+# print("-------------- totalFace ---------------")
+# print(totalFace)
 
 
-print("-------------- List of Records --------------")
 
-print(listOfRecords)
-
-print("-------------- Frame with faces ---------------")
-print(frame_with_faces)
-
-print("-------------- totalFace ---------------")
-print(totalFace)
-
-print(counter)
 
 
 
