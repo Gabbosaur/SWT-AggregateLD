@@ -537,7 +537,7 @@ for i in range(len(listOfRecords)):
 	if counter==maxSpeakerApparence:
 		break
 
-print(" - - - VIDEO SUMMARY - - - ")
+print(" - - - - - VIDEO SUMMARY - - - - - ")
 print("Le facce trovate sono: ", totalFace)
 print("La faccia con più apparizioni è quella con id: "+str(idSpeaker)+" ed ha avuto "+str(maxSpeakerApparence)+" apparizioni con una percentuale di " + str(round(maxSpeakerApparence/n_frame_analyzed*100, 2)) + "%")
 
@@ -545,6 +545,7 @@ print("Scene:")
 for i in range(len(counter_scenes)):
 	print(scenes[i] + ": " + str(counter_scenes[i]) + " frames (" + str(round((counter_scenes[i]/n_frame_analyzed)*100,2)) + "%)")
 
+print(" - - - - - - - - - - - - - - - - - ")
 # print("-------------- List of Records --------------")
 
 # print(listOfRecords)
