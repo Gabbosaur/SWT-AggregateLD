@@ -249,6 +249,10 @@ class Record: # 1 frame
 	idFaces: list 			# [0,1,2] in questo caso ci sono 3 persone distinte e alla fine contare le occorrenze e scegliere il massimo, se il numero delle occorrenze fossero uguali, si prende quello con l'id più basso
 	scene: any				# blackboard || slide || slide-and-talk || talk
 
+
+							# punti mediapipe upperbody position
+
+
 # id face, id che assegneremo al momento del compare
 
 @dataclass
@@ -257,6 +261,11 @@ class FrameWithFaces:
 	num_faces: int
 	isProcessed: list
 	time: float
+
+@dataclass
+class Segment:
+	id_label: any
+	list_of_same_scene: list	# lista di Records di quel tipo di scena
 
 
 listOfRecords=[]
