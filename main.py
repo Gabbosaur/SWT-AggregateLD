@@ -265,22 +265,27 @@ class FrameWithFaces:
 @dataclass
 class Segment:
 	id_label: any
+	start_time: float
+	end_time: float
 	list_of_same_scene: list	# lista di Records di quel tipo di scena
 
 
 listOfRecords=[]
+listOfSegments=[]
 IMAGE_FACES_PATH = 'images/faces/'
 NOME_VIDEO = 'prova2persone.mp4'
 video = cv2.VideoCapture(NOME_VIDEO)
 i = 0
 # a variable to set how many frames you want to skip
 fps = video.get(cv2.CAP_PROP_FPS)
-frame_skip = fps*5 #un frame ogni 5 secondi
+secondsForFrameSkip=5
+frame_skip = fps*secondsForFrameSkip #un frame ogni 5 secondi
 frame_counter=0
 temp=1/fps
 n_frame_analyzed = 0
 frame_with_faces = []
 lunghezza_isProcessed = 1
+totalFrame=0
 
 count_frame_doppi=0
 
@@ -295,6 +300,7 @@ while video.isOpened():
 	ret, frame = video.read()
 	if not ret:
 		break
+	totalFrame += 1
 	if i > frame_skip - 1: # In questo caso ogni 5 secondi
 		duration = frame_counter*temp
 		minutes = int(duration/60)
@@ -312,6 +318,35 @@ while video.isOpened():
 		isPersonDetected = rilevaPersona(model, frame)
 
 		if isPersonDetected == True:
+			'''
+			import cv2
+			import mediapipe as mp
+			import numpy as np
+			mp_drawing = mp.solutions.drawing_utils
+			mp_drawing_styles = mp.solutions.drawing_styles
+			mp_pose = mp.solutions.pose
+
+			# For static images:
+			BG_COLOR = (192, 192, 192) # gray
+			with mp_pose.Pose(static_image_mode=True, model_complexity=1, enable_segmentation=False, min_detection_confidence=0.5) as pose:
+				image = cv2.imread(frame)
+				image_height, image_width, _ = image.shape
+				# Convert the BGR image to RGB before processing.
+				results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+
+
+				for i in range(0,33):
+					results.pose_landmarks.landmark[i].x = results.pose_landmarks.landmark[i].x * image_width
+					results.pose_landmarks.landmark[i].y = results.pose_landmarks.landmark[i].y * image_height
+				print("")
+				print(results.pose_landmarks)
+
+				if not results.pose_landmarks:
+					print("Non trovo pose.")
+
+			'''
+			#aggiungere results.pose_landmarks alla classe record e passare la variabile quando viene popolata
+
 			with mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.5) as face_detection:
 
 				# image = cv2.imread(file)
@@ -546,15 +581,43 @@ for i in range(len(listOfRecords)):
 	if counter==maxSpeakerApparence:
 		break
 
+listOfSameSegment=[]
+startSegment=0.0
+endSegment=0.0
+for i in range(0,len(listOfRecords)):
+	if i==0:
+		#primo elemento
+		actualSegmentScene=listOfRecords[i].scene
+		listOfSameSegment.append(listOfRecords[i])
+		endSegment=listOfRecords[i].time
+	else:
+		if actualSegmentScene==listOfRecords[i].scene:
+			listOfSameSegment.append(listOfRecords[i])
+			endSegment=listOfRecords[i].time
+		else:
+			endSegment=listOfRecords[i].time-secondsForFrameSkip
+			listOfSegments.append(Segment(actualSegmentScene,startSegment,endSegment,listOfSameSegment[:]))
+			actualSegmentScene=listOfRecords[i].scene
+			startSegment=endSegment+secondsForFrameSkip
+			endSegment=listOfRecords[i].time
+			listOfSameSegment.clear()
+			listOfSameSegment.append(listOfRecords[i])
+listOfSegments.append(Segment(actualSegmentScene,startSegment,totalFrame*temp,listOfSameSegment[:]))
+
+
 print(" - - - - - VIDEO SUMMARY - - - - - ")
 print("Le facce trovate sono: ", totalFace)
 print("La faccia con più apparizioni è quella con id: "+str(idSpeaker)+" ed ha avuto "+str(maxSpeakerApparence)+" apparizioni con una percentuale di " + str(round(maxSpeakerApparence/n_frame_analyzed*100, 2)) + "%")
 
-print("Scene:")
+print("\nScene:")
 for i in range(len(counter_scenes)):
 	print(scenes[i] + ": " + str(counter_scenes[i]) + " frames (" + str(round((counter_scenes[i]/n_frame_analyzed)*100,2)) + "%)")
-
+print("\nSegmenti:")
+for indice,segment in enumerate(listOfSegments):
+	print("Segmento {}: {}   da {} a {}".format(indice+1,segment.id_label,segment.start_time,segment.end_time))
 print(" - - - - - - - - - - - - - - - - - ")
+
+
 # print("-------------- List of Records --------------")
 
 # print(listOfRecords)
