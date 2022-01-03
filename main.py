@@ -251,6 +251,8 @@ class Record: # 1 frame
 
 
 							# punti mediapipe upperbody position
+	def to_dict(self):
+			return {"num_frame": self.num_frame, "time": self.time, "list_words": self.list_words, "isPersonDetected": self.isPersonDetected, "isSpeaker": self.isSpeaker, "idFaces": self.idFaces, "scene": self.scene}
 
 
 # id face, id che assegneremo al momento del compare
@@ -268,6 +270,9 @@ class Segment:
 	start_time: float
 	end_time: float
 	list_of_same_scene: list	# lista di Records di quel tipo di scena
+
+	def to_dict(self):
+		return {"id_label": self.id_label, "start_time": self.start_time, "end_time": self.end_time, "list_of_same_scene":[ obj.to_dict() for obj in self.list_of_same_scene ]}
 
 
 listOfRecords=[]
@@ -633,10 +638,10 @@ print(" - - - - - - - - - - - - - - - - - ")
 
 
 
-for y in listOfRecords:
-	duration=y.time
-	minutes = int(duration/60)
-	seconds = int(duration%60)
+#for y in listOfRecords:
+	#duration=y.time
+	#minutes = int(duration/60)
+	#seconds = int(duration%60)
 	# print('duration (M:S) = ' + str(minutes) + ':' + str(seconds))
 	# print(y.list_words)
 	# print("Persona presente? " + str(y.isPersonDetected))
@@ -656,3 +661,28 @@ for filename in os.listdir(IMAGE_FACES_PATH):
             shutil.rmtree(file_path)
     except Exception as e:
         print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+import json
+
+results = [obj.to_dict() for obj in listOfSegments]
+
+print(results)
+
+with open('data_'+FILENAME+'.txt', 'w') as outfile:
+	json.dump(results, outfile)
+#jsonData = json.dumps(listOfSegments)
+
+# #########esempio lettura
+
+# with open('data_prova2persone.txt') as f:
+# 	data = json.load(f)
+
+# print(type(data))
+
+# for i in data:
+# 	for j in i["list_of_same_scene"]:
+# 		for k in j["list_words"]:
+# 			if k=='\\':
+# 				print("!!!!!!!!!!!!")
+# 	#print(i)
+
