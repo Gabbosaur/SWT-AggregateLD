@@ -3,7 +3,7 @@
 
 ## Setup
 <br />
-<b>Step 1.</b> Clone this repository: https://github.com/Gabbosaur/TFOD-SWT-AggregateLD
+<b>Step 1.</b> Clone this repository: https://github.com/Gabbosaur/SWT-AggregateLD
 <br/><br/>
 <b>Step 2.</b> Create a new virtual environment 
 <pre>
