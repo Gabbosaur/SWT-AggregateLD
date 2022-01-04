@@ -1,7 +1,7 @@
 # EDURELL - Knowledge extraction from video
-<p>The goal is to identify concepts, compute their relevance and track them along the video flow.
+<p>The goal is to identify concepts, compute their relevance and track them along the video flow. By given an educational video, the program detects (if there are any) the person who appeared the most (in our case the speaker), the scene that we are most likely looking at (blackboard, slide, slide-and-talk, talk) and extracts texts. 
 
-## Steps
+## Setup
 <br />
 <b>Step 1.</b> Clone this repository: https://github.com/Gabbosaur/TFOD-SWT-AggregateLD
 <br/><br/>
