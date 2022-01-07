@@ -3,7 +3,8 @@
 
 ## Setup
 <br />
-<b>Step 1.</b> Clone this repository: https://github.com/Gabbosaur/SWT-AggregateLD
+<b>Step 1.</b> Clone this repository
+<pre>git clone https://github.com/Gabbosaur/SWT-AggregateLD</pre>
 <br/><br/>
 <b>Step 2.</b> Create a new virtual environment
 <pre>
