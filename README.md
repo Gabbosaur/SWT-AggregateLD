@@ -5,18 +5,24 @@
 <br />
 <b>Step 1.</b> Clone this repository: https://github.com/Gabbosaur/TFOD-SWT-AggregateLD
 <br/><br/>
-<b>Step 2.</b> Create a new virtual environment 
+<b>Step 2.</b> Create a new virtual environment
 <pre>
 python -m venv edurell
-</pre> 
+</pre>
 <br/>
 <b>Step 3.</b> Activate your virtual environment
 <pre>
 source tfod/bin/activate # Linux
-.\tfod\Scripts\activate # Windows 
+.\tfod\Scripts\activate # Windows
 </pre>
 <br/>
 <b>Step 4.</b> Install libraries used in the project
+<pre>
+pip install -r requirements.txt
+</pre>
 <br/>
-<b>Step 5.</b> Set video filename to be processed
+<b>Step 5.</b> Set video path and an integer for each seconds to pass to be processed
+<pre>
+python main.py {FILE_PATH} {N_SECONDS_FROM_FRAME_TO_FRAME}
+</pre>
 <br/>

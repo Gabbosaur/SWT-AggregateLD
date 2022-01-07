@@ -1,5 +1,24 @@
-import cv2
 import os
+import sys
+
+# Controllo degli argomenti passati in linea di comando
+if (len(sys.argv)<3):
+	print("ERRORE: inserisci il percorso del video da elaborare e ogni quanti secondi prendere un frame.")
+	sys.exit()
+
+try:
+	secondsForFrameSkip=int(sys.argv[2])
+except:
+	print("ERRORE: inserire un numero intero come secondo parametro.")
+	sys.exit()
+
+PATH_VIDEO = sys.argv[1]
+if not os.path.exists(PATH_VIDEO):
+	print("ERRORE: video inesistente.")
+	sys.exit()
+
+
+import cv2
 import numpy as np
 import tensorflow as tf
 from object_detection.utils import label_map_util
@@ -14,6 +33,7 @@ import calculateFeatureAndTrain_module
 matplotlib.use("TkAgg", force=True)
 #%matplotlib inline
 #plt.show()
+
 
 CUSTOM_MODEL_NAME = 'my_ssd_mobnet'
 PRETRAINED_MODEL_NAME = 'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8'
@@ -46,7 +66,7 @@ files = {
 	'LABELMAP': os.path.join(paths['ANNOTATION_PATH'], LABEL_MAP_NAME)
 }
 
-#######################################YOLO V3, non utilizzata perché rileva oggetti 
+#######################################YOLO V3, non utilizzata perché rileva oggetti
 def testConYoloV3():
 	# Load Yolo
 	print("LOADING YOLO")
@@ -157,9 +177,12 @@ def rilevaPersona(model, frame):
 
 	labels, cord_thres = results.xyxyn[0][:, -1].numpy(), results.xyxyn[0][:, :-1].numpy() # estraggo labels e coordinate dei rettangoli
 	classes = model.names
+	label_class = []
+
 	# show results
 	for i in labels:
 		# print(classes[int(i)])
+		label_class.append(classes[int(i)])
 		if(classes[int(i)]=="person"):
 			isPerson=True
 
@@ -221,7 +244,7 @@ def rilevaPersona(model, frame):
 		print("YOLOv5: PERSONA NON RICONOSCIUTA")
 
 
-	return isPerson
+	return isPerson, label_class
 
 
 
@@ -248,11 +271,11 @@ class Record: # 1 frame
 	# path_faces: list 		# ['faccia1', 'faccia2', 'faccia3']
 	idFaces: list 			# [0,1,2] in questo caso ci sono 3 persone distinte e alla fine contare le occorrenze e scegliere il massimo, se il numero delle occorrenze fossero uguali, si prende quello con l'id più basso
 	scene: any				# blackboard || slide || slide-and-talk || talk
-
+	objects_detected: any	# lista di oggetti rilevati tramite YoloV5
 
 							# punti mediapipe upperbody position
 	def to_dict(self):
-			return {"num_frame": self.num_frame, "time": self.time, "list_words": self.list_words, "isPersonDetected": self.isPersonDetected, "isSpeaker": self.isSpeaker, "idFaces": self.idFaces, "scene": self.scene}
+			return {"num_frame": self.num_frame, "time": self.time, "list_words": self.list_words, "isPersonDetected": self.isPersonDetected, "isSpeaker": self.isSpeaker, "idFaces": self.idFaces, "scene": self.scene, "objects_detected": self.objects_detected}
 
 
 # id face, id che assegneremo al momento del compare
@@ -278,12 +301,14 @@ class Segment:
 listOfRecords=[]
 listOfSegments=[]
 IMAGE_FACES_PATH = 'images/faces/'
-NOME_VIDEO = 'prova2persone.mp4'
-video = cv2.VideoCapture(NOME_VIDEO)
+
+HEAD_VIDEO, NOME_VIDEO = os.path.split(PATH_VIDEO)
+video = cv2.VideoCapture(PATH_VIDEO)
+
 i = 0
 # a variable to set how many frames you want to skip
 fps = video.get(cv2.CAP_PROP_FPS)
-secondsForFrameSkip=5
+
 frame_skip = fps*secondsForFrameSkip #un frame ogni 5 secondi
 frame_counter=0
 temp=1/fps
@@ -299,6 +324,8 @@ counter_scenes = [0,0,0,0] # blackboard, slide, slide-and-talk, talk
 
 # Carico il modello migliore per scene prediction
 scene_model = pickle.load(open("xgboost500.sav", 'rb'))
+
+
 
 
 while video.isOpened():
@@ -320,8 +347,8 @@ while video.isOpened():
 		#print("frame number: " + str(frame_counter))
 
 		# Riconoscimento persona con YoloV5
-		isPersonDetected = rilevaPersona(model, frame)
-
+		isPersonDetected, oggetti_rilevati = rilevaPersona(model, frame)
+		print("OGGETTI RILEVATI: ", oggetti_rilevati)
 		if isPersonDetected == True:
 			'''
 			import cv2
@@ -469,7 +496,7 @@ while video.isOpened():
 		print("")
 
 		#struct con numero del frame e la lista di parole
-		rec=Record(frame_counter,frame_counter*temp,temp_list_words, isPersonDetected, False, list_idFaces, scenes[int(y_pred)])
+		rec=Record(frame_counter,frame_counter*temp,temp_list_words, isPersonDetected, False, list_idFaces, scenes[int(y_pred)], oggetti_rilevati)
 		#controlliamo se questo identico record è già contenuto nella lista
 		#potrebbe essere dispendioso, facciamo solo il compare con l'ultimo frame in listOfRecords?
 		flag=False
@@ -619,7 +646,7 @@ for i in range(len(counter_scenes)):
 	print(scenes[i] + ": " + str(counter_scenes[i]) + " frames (" + str(round((counter_scenes[i]/n_frame_analyzed)*100,2)) + "%)")
 print("\nSegmenti:")
 for indice,segment in enumerate(listOfSegments):
-	print("Segmento {}: {}   da {} a {}".format(indice+1,segment.id_label,segment.start_time,segment.end_time))
+	print("Segmento {}: {}   da {} a {}".format(indice+1,segment.id_label,round(segment.start_time,0),round(segment.end_time,0)))
 print(" - - - - - - - - - - - - - - - - - ")
 
 
@@ -661,6 +688,8 @@ for filename in os.listdir(IMAGE_FACES_PATH):
             shutil.rmtree(file_path)
     except Exception as e:
         print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+
 
 import json
 
