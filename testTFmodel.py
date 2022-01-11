@@ -33,7 +33,7 @@ from matplotlib import pyplot as plt
 LABEL_MAP = 'Tensorflow\\workspace\\annotations\\label_map.pbtxt'
 category_index = label_map_util.create_category_index_from_labelmap(LABEL_MAP)
 
-IMAGE = "cas2.jpg"
+IMAGE = "images/cas1.jpg"
 img = cv2.imread(IMAGE)
 image_np = np.array(img)
 

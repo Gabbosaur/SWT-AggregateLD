@@ -152,8 +152,7 @@ def testConYoloV3():
 
 
 import yolov5
-import torch
-
+#import torch
 # YOLOV5_model=os.path.join('tfod', 'Lib','site-packages', 'yolov5' ,'models', 'yolov5s.yaml'),
 # print(os.getcwd()) # returns the currently working directory of a process
 # model = yolov5.load(YOLOV5_model) # carico modello tramite formato yaml, però non funziona
@@ -325,9 +324,6 @@ counter_scenes = [0,0,0,0] # blackboard, slide, slide-and-talk, talk
 # Carico il modello migliore per scene prediction
 scene_model = pickle.load(open("xgboost500.sav", 'rb'))
 
-
-
-
 while video.isOpened():
 	ret, frame = video.read()
 	if not ret:
@@ -351,6 +347,7 @@ while video.isOpened():
 		print("OGGETTI RILEVATI: ", oggetti_rilevati)
 		if isPersonDetected == True:
 			'''
+			# # BODY LANDMARKS POINTS extraction
 			import cv2
 			import mediapipe as mp
 			import numpy as np
@@ -366,7 +363,7 @@ while video.isOpened():
 				# Convert the BGR image to RGB before processing.
 				results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
-
+				# I punti non sono più normalizzati (da 0 a 1) ma sono relative alla risoluzione dell'immagine
 				for i in range(0,33):
 					results.pose_landmarks.landmark[i].x = results.pose_landmarks.landmark[i].x * image_width
 					results.pose_landmarks.landmark[i].y = results.pose_landmarks.landmark[i].y * image_height
@@ -530,7 +527,7 @@ cv2.destroyAllWindows()
 
 
 
-# SVILUPPARE IL CICLO CHE VA A COMPARARE TUTTE LE FACCE
+# CICLO CHE VA A COMPARARE TUTTE LE FACCE
 # Compara le due foto e definisce se le due persone trovate sono la stessa persona
 # result = DeepFace.verify(img1_path = "images/lec3.jpg", img2_path = IMAGE_FACES_PATH+"face_of_lec2_face0.jpg")
 # print(result)
@@ -604,6 +601,7 @@ idSpeaker=totalFace.index(max(totalFace))
 maxSpeakerApparence=max(totalFace) # numero delle apparizioni dello speaker
 
 counter=0
+# Setta isSpeaker a True per ogni record che contiene gli ID della faccia che è comparsa più volte
 for i in range(len(listOfRecords)):
 	for j in range(len(listOfRecords[i].idFaces)):
 		if listOfRecords[i].idFaces[j]==idSpeaker:
@@ -613,6 +611,8 @@ for i in range(len(listOfRecords)):
 	if counter==maxSpeakerApparence:
 		break
 
+
+# Segment
 listOfSameSegment=[]
 startSegment=0.0
 endSegment=0.0
@@ -691,23 +691,21 @@ for filename in os.listdir(IMAGE_FACES_PATH):
 
 
 
+# # Write video data in json output file
 import json
-
 results = [obj.to_dict() for obj in listOfSegments]
-
 print(results)
-
 with open('data_'+FILENAME+'.txt', 'w') as outfile:
 	json.dump(results, outfile)
-#jsonData = json.dumps(listOfSegments)
 
-# #########esempio lettura
 
+# # Read video data from json file
 # with open('data_prova2persone.txt') as f:
 # 	data = json.load(f)
 
 # print(type(data))
 
+# # Example of reading data structure from JSON file
 # for i in data:
 # 	for j in i["list_of_same_scene"]:
 # 		for k in j["list_words"]:
