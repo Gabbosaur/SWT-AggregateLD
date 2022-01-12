@@ -25,7 +25,7 @@ def detect_fn(image):
 
 
 
-import cv2 
+import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 # %matplotlib inline

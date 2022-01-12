@@ -17,6 +17,7 @@ mp_drawing = mp.solutions.drawing_utils
 IMAGE_TRAIN_PATH= "images\\train"
 IMAGE_TEST_PATH= "images\\test"
 
+# Plot the color histogram divided in 16 groups
 def plotList(array):
 	objects = ('0', '1', '2', '3', '4', '5','6','7','8','9','10','11','12','13','14','15')
 	y_pos = np.arange(len(objects))
@@ -27,6 +28,7 @@ def plotList(array):
 
 	plt.show()
 
+# Print the confusion matrix
 def confusionMatrix(y_test, y_pred, actions):
 	print("\nCONFUSION MATRIX\n")
 
@@ -67,6 +69,8 @@ def confusionMatrix(y_test, y_pred, actions):
 	# print("\nmetrics.confusion_matrix")
 	# print(confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1)))
 
+
+# Extract features from multiple images in a folder
 def featureExtraction(IMAGE_TRAIN_PATH):
 	PROJECT_PATH=pathlib.Path(__file__).parent.resolve() #restituisce il path del progetto
 	FINAL_IMAGE_TRAIN_PATH=os.path.join(PROJECT_PATH,IMAGE_TRAIN_PATH)
@@ -167,6 +171,8 @@ def featureExtraction(IMAGE_TRAIN_PATH):
 
 	return X_train, y_train
 
+
+# Extract features from a single image (either image path or the image already read)
 def singleImageFeatureExtraction(final_file_path = None, img = None):
 	numero_gruppi = 16
 	flagException = False
@@ -253,11 +259,15 @@ def singleImageFeatureExtraction(final_file_path = None, img = None):
 
 	return features
 
+
+# Print the model's score
 def print_model_score(model):
 	X_train, y_train = featureExtraction(IMAGE_TRAIN_PATH)
 	cross_score = cross_val_score(model, X_train, y_train, cv=5)
 	print("Model's score: %f accuracy with a standard deviation of %f" % (cross_score.mean(), cross_score.std()))
 
+
+# Function to train the XGBoost model
 def train():
 	X_train, y_train = featureExtraction(IMAGE_TRAIN_PATH)
 	X_test, y_test = featureExtraction(IMAGE_TEST_PATH)

@@ -4,6 +4,7 @@ from sklearn.model_selection import cross_val_score
 import pickle
 import optuna
 
+# Transform from one hot encoding to 1-dimensional list
 def oneHot_to_1D(y):
 
 	y_final = []
@@ -15,6 +16,8 @@ def oneHot_to_1D(y):
 
 	return y_final
 
+
+# Transform from 1-dimensional list to one-hot-encoding
 def oneD_to_oneHot(y):
 	y_final = []
 	for i in range(0,len(y)):
@@ -28,6 +31,8 @@ def oneD_to_oneHot(y):
 			y_final.append([0,0,0,1])
 	return y_final
 
+
+# Used for cross validation score
 def train_and_score(X_train, X_test, y_train, y_test):
 
 	y_train_new = y_train
@@ -51,6 +56,7 @@ def train_and_score(X_train, X_test, y_train, y_test):
 	return y_pred
 
 
+# Train and save to file the model
 def train(X_train,y_train,best_params):
 
 	model = svm.SVC(**best_params, random_state=0)
@@ -65,6 +71,7 @@ def train(X_train,y_train,best_params):
 	return model
 
 
+# Find the best hyperparameters with Optuna
 def findBestHyperparameters(X_train, y_train):
 
 	def objective(trial):
