@@ -694,7 +694,7 @@ for filename in os.listdir(IMAGE_FACES_PATH):
 # # Write video data in json output file
 import json
 results = [obj.to_dict() for obj in listOfSegments]
-print(results)
+# print(results)
 with open('data_'+FILENAME+'.txt', 'w') as outfile:
 	json.dump(results, outfile)
 
